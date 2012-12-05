@@ -16,6 +16,7 @@ trait Repositories { self: Client =>
                          ignoreTemplate: Option[String] = None)
      extends Client.Completion
         with Jsonizing {
+
     def desc(d: String) = copy(descval = Some(d))
     def homepage(h: String) = copy(homepageval = Some(h))
     def issues(b: Boolean) = copy(hasIssues = b)
@@ -89,4 +90,3 @@ trait Repositories { self: Client =>
   def debranch(user: String, repo: String, br: String) =
     complete(apiHost.DELETE / "users" / user / repo / "branches" / br)
 }
-

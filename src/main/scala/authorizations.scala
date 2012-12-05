@@ -8,7 +8,9 @@ trait Authorizations { self: Client =>
                                   noteval: Option[String] = None,
                                   urlval: Option[String] = None, 
                                   clientval: Option[(String, String)] = None)
-     extends Client.Completion {
+     extends Client.Completion
+        with Jsonizing {
+
     def scopes(s: String*) = copy(scopesval = Some(s))
     def note(n: String) = copy(noteval = Some(n))
     def url(u: String) = copy(urlval = Some(u))
@@ -22,8 +24,8 @@ trait Authorizations { self: Client =>
       import net.liftweb.json.JsonDSL._
       val base: JObject = 
         ("scopes" -> scopesval.map(_.toList).getOrElse(Nil)) ~
-        ("note" -> noteval.map(JString(_)).getOrElse(JNothing)) ~
-        ("note_url" -> urlval.map(JString(_)).getOrElse(JNothing))
+        ("note" -> jStringOrNone(noteval)) ~
+        ("note_url" -> jStringOrNone(urlval))
       val js = clientval.map {
         case (id, sec) => base ~ ("client_id" -> id) ~ ("client_secret" -> sec)
       }.getOrElse(base)
@@ -36,12 +38,14 @@ trait Authorizations { self: Client =>
                                 scopeop: Option[Boolean] = None,
                                 urlval: Option[String] = None,
                                 noteval: Option[String] = None)
-     extends Client.Completion {
+     extends Client.Completion
+        with Jsonizing {
+
     def note(n: String) = copy(noteval = Some(n))
     def url(u: String) = copy(urlval = Some(u))
-    def addScopes(sx: Seq[String]) =
+    def addScopes(sx: String*) =
       copy(scopesval = Some(sx), scopeop = Some(true))
-    def removeScopes(sx: Seq[String]) =
+    def removeScopes(sx: String*) =
       copy(scopesval = Some(sx), scopeop = Some(false))
     def scopes(sx: String*) =
       copy(scopesval = Some(sx), scopeop = None)
@@ -53,8 +57,8 @@ trait Authorizations { self: Client =>
       import net.liftweb.json._
       import net.liftweb.json.JsonDSL._
       val note =
-        ("note" -> noteval.map(JString(_)).getOrElse(JNothing)) ~
-        ("note_url" -> urlval.map(JString(_)).getOrElse(JNothing))
+        ("note" -> jStringOrNone(noteval)) ~
+        ("note_url" -> jStringOrNone(urlval))
       val js = scopeop.map {
         op =>
           val scps = if (op) ("add_scopes" -> scopesval.map(_.toList))
@@ -72,7 +76,8 @@ trait Authorizations { self: Client =>
   def authorization(id: String) =
     complete(apiHost / "authorizations" / id)
 
-  def authorize = AuthorizationBuilder()
+  def authorize =
+    AuthorizationBuilder()
 
   def reauthorize(id: String) =
     ReauthorizeBuilder(id)

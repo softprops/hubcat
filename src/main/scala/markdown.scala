@@ -9,6 +9,7 @@ trait Markdown { self: Client =>
                              modeval: Option[String] = None,
                              contextval: Option[String] = None)
      extends Client.Completion {
+
     def context(user: String, repo: String) =
       copy(contextval = Some("%s/%s" format(user, repo)))
     def plain =

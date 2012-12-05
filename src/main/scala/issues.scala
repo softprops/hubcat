@@ -19,16 +19,16 @@ trait Issues { self: Client =>
     complete(apiHost / "orgs" / org / "issues")
 
   case class RepoIssuesBuilder(user: String,
-                        repo: String,
-                        milestoneval: String = "*",
-                        state: String = "open",
-                        assigneeval: Option[String] = None,
-                        creatorval: Option[String] = None,
-                        mentionedval: Option[String] = None,
-                        labelsval: Option[Traversable[String]] = None,
-                        sort: String = "created",
-                        order: String = "desc",
-                        sinceval: Option[String] = None)
+                               repo: String,
+                               milestoneval: String = "*",
+                               state: String = "open",
+                               assigneeval: Option[String] = None,
+                               creatorval: Option[String] = None,
+                               mentionedval: Option[String] = None,
+                               labelsval: Option[Traversable[String]] = None,
+                               sort: String = "created",
+                               order: String = "desc",
+                               sinceval: Option[String] = None)
     extends Client.Completion {
 
     // states (defaults to open)
@@ -82,27 +82,32 @@ trait Issues { self: Client =>
       labelsval.map("labels" -> _.mkString(","))
   }
 
-  case class RepoIssueCreateBuilder(user: String, repo: String,
-                                    title: String,
-                                    bodyval: Option[String] = None,
-                                    assigneeval: Option[String] = None,
-                                    milestoneval: Option[Int] = None,
-                                    labelsval: Option[Seq[String]] = None)
+  case class RepoIssueBuilder(user: String, repo: String,
+                              id: Option[Int] = None,
+                              titleval: Option[String] = None,
+                              bodyval: Option[String] = None,
+                              assigneeval: Option[String] = None,
+                              milestoneval: Option[Int] = None,
+                              labelsval: Option[Seq[String]] = None)
      extends Client.Completion
         with Jsonizing {
+
+    def title(t: String) = copy(titleval = Some(t))
     def body(b: String) = copy(bodyval = Some(b))
     def assignee(a: String) = copy(assigneeval = Some(a))
     def milestone(m: Int) = copy(milestoneval = Some(m))
     def labels(ls: Seq[String]) = copy(labelsval = Some(ls))
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(apiHost / "repos" / user / repo / "issues" << pjson)(handler)
+      request(id.map(apiHost.PUT / "repos" / user / repo / "issues" / _.toString).getOrElse(
+        apiHost.POST / "repos" / user / repo
+      ) << pjson)(handler)
 
     private def pjson = {
       import net.liftweb.json._
       import net.liftweb.json.JsonDSL._
       val js =
-        ("title" -> title) ~
+        ("title" -> jStringOrNone(titleval)) ~
         ("body" -> jStringOrNone(bodyval)) ~
         ("assignee" -> jStringOrNone(assigneeval)) ~
         ("milestone" -> jIntOrNone(milestoneval))
@@ -118,23 +123,9 @@ trait Issues { self: Client =>
   def repoissue(user: String, repo: String, id: String) =
     complete(apiHost / "repos" / user / repo / "issues" / id)
 
-   def newRepoIssue(user: String,
-                    repo: String,
-                    title: String,
-                    body: Option[String],
-                    assignee: Option[String],
-                    milestone: Option[String],
-                    labels: Option[Seq[String]]) =
-                      complete(apiHost.POST / "repos" / user / repo / "issues")
+   def newRepoIssue(user: String, repo: String, title: String) =
+     RepoIssueBuilder(user, repo).title(title)
 
-   def reissue(user: String,
-               repo: String,
-               id: String,
-               title: Option[String],
-               body: Option[String],
-               assignee: Option[String],
-               state: Option[String],
-               milestone: Option[String],
-               labels: Option[Seq[String]]) =
-                 complete(apiHost.PATCH / "repos" / user / repo / "issues" / id)
+   def reissue(user: String, repo: String, id: Int) =
+     RepoIssueBuilder(user, repo, id = Some(id))
 }

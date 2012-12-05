@@ -7,7 +7,9 @@ trait Gists { self: Client =>
   case class GistBuilder(filevals: Map[String, String] = Map.empty[String, String],
                          descval: Option[String] = None,
                          vis: Boolean = true)
-     extends Client.Completion {
+     extends Client.Completion
+        with Jsonizing {
+
     def desc(d: String) = copy(descval = Some(d))
     def pub = copy(vis = true)
     def priv = copy(vis = false)
@@ -22,7 +24,7 @@ trait Gists { self: Client =>
       import net.liftweb.json.JsonDSL._
       val js =
         ("public" -> vis) ~ 
-        ("description" -> descval.map(JString(_)).getOrElse(JNothing)) ~
+        ("description" -> jStringOrNone(descval)) ~
         ("files" -> filevals.map {
           case (name, content) => (name -> ("content" -> content))
         })
@@ -33,7 +35,9 @@ trait Gists { self: Client =>
   case class RegistBuilder(id: String,
                            filevals: Map[String, String] = Map.empty[String, String],
                            descval: Option[String] = None)
-     extends Client.Completion {    
+     extends Client.Completion
+        with Jsonizing {
+
     def desc(d: String) = copy(descval = Some(d))
     def file(content: String, name: String = "f%s" format filevals.size) =
       copy(filevals = filevals + ((name, content)))
@@ -45,7 +49,7 @@ trait Gists { self: Client =>
       import net.liftweb.json._
       import net.liftweb.json.JsonDSL._
       val js =
-        ("description" -> descval.map(JString(_)).getOrElse(JNothing)) ~
+        ("description" -> jStringOrNone(descval)) ~
         ("files" -> filevals.map {
           case (name, content) => (name -> ("content" -> content))
         })
