@@ -5,7 +5,7 @@ import com.ning.http.client.RequestBuilder
 
 // application/json
 //application/vnd.github.VERSION.raw
-trait Git { self: Client =>
+trait Git { self: Requests =>
   def repo(user: String, repo: String) = new {
 
     // blobs

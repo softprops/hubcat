@@ -4,7 +4,7 @@ import dispatch._
 import com.ning.http.client.RequestBuilder
 
 // todo: support raw
-trait Markdown { self: Client =>
+trait Markdown { self: Requests =>
   case class MarkdownBuilder(text: String,
                              modeval: Option[String] = None,
                              contextval: Option[String] = None)

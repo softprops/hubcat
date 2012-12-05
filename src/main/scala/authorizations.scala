@@ -3,7 +3,7 @@ package hubcat
 import dispatch._
 import com.ning.http.client.RequestBuilder
 
-trait Authorizations { self: Client =>
+trait Authorizations { self: Requests =>
   case class AuthorizationBuilder(scopesval: Option[Seq[String]] = None,
                                   noteval: Option[String] = None,
                                   urlval: Option[String] = None, 

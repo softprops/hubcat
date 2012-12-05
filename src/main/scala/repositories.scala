@@ -3,7 +3,7 @@ package hubcat
 import dispatch._
 import com.ning.http.client.RequestBuilder
 
-trait Repositories { self: Client =>
+trait Repositories { self: Requests =>
 
   case class RepoBuilder(name: String, org: Option[String] = None,
                          descval: Option[String] = None,

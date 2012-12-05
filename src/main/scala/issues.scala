@@ -7,7 +7,7 @@ import com.ning.http.client.RequestBuilder
 //application/vnd.github.VERSION.text+json
 // application/vnd.github.VERSION.html+json
 // application/vnd.github.VERSION.full+json
-trait Issues { self: Client =>
+trait Issues { self: Requests =>
   
   def issues = // not found?
     complete(apiHost / "issues")

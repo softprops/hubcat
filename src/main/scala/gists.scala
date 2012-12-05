@@ -3,7 +3,7 @@ package hubcat
 import dispatch._
 import com.ning.http.client.RequestBuilder
 
-trait Gists { self: Client =>
+trait Gists { self: Requests =>
   case class GistBuilder(filevals: Map[String, String] = Map.empty[String, String],
                          descval: Option[String] = None,
                          vis: Boolean = true)

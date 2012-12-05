@@ -10,14 +10,8 @@ object Client {
   }
 }
 
-class Client(credentials: Credentials, http: Http = Http)
-  extends DefaultHosts
-     with Gists
-     with Git
-     with Issues
-     with Markdown
-     with Searching
-     with Repositories {
+abstract class Requests(credentials: Credentials, http: Http = Http)
+  extends DefaultHosts {
   def request[T](req: RequestBuilder)(handler: Client.Handler[T]): Promise[T] =
     http(credentials.sign(req) > handler)
   def complete(req: RequestBuilder) = new Client.Completion {
@@ -26,8 +20,18 @@ class Client(credentials: Credentials, http: Http = Http)
   }
 }
 
+class Client(credentials: Credentials, http: Http = Http)
+  extends Requests(credentials, http)
+     with Gists
+     with Git
+     with Issues
+     with Markdown
+     with Searching
+     with Repositories
+
+
 class AuthorizationClient(user: String, pass: String, http: Http = Http)
-  extends Client(BasicAuth(user, pass), http)
+  extends Requests(BasicAuth(user, pass), http)
      with Authorizations {
   override def toString() = "%s(%s,%s)".format(getClass.getSimpleName, user,"*"*pass.size)
 }
