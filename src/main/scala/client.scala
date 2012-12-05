@@ -14,7 +14,7 @@ abstract class Requests(credentials: Credentials, http: Http = Http)
   extends DefaultHosts {
   def request[T](req: RequestBuilder)(handler: Client.Handler[T]): Promise[T] =
     http(credentials.sign(req) > handler)
-  def complete(req: RequestBuilder) = new Client.Completion {
+  def complete(req: RequestBuilder): Client.Completion = new Client.Completion {
     override def apply[T](handler: Client.Handler[T]) =
       request(req)(handler)
   }
