@@ -20,19 +20,21 @@ abstract class Requests(credentials: Credentials, http: Http = Http)
   }
 }
 
-class Client(credentials: Credentials, http: Http = Http)
-  extends Requests(credentials, http)
-     with Gists
-     with Git
-     with Issues
-     with Markdown
-     with Searching
-     with Repositories
+case class Client(token: String, http: Http = Http)
+   extends Requests(OAuth2(token), http)
+      with Gists
+      with Git
+      with Issues
+      with Markdown
+      with Searching
+      with Repositories {
+  override def toString() = "%s(%s)".format(getClass.getSimpleName, "*"*token.size)
+}
 
 
-class AuthorizationClient(user: String, pass: String, http: Http = Http)
-  extends Requests(BasicAuth(user, pass), http)
-     with Authorizations {
+case class AuthorizationClient(user: String, pass: String, http: Http = Http)
+   extends Requests(BasicAuth(user, pass), http)
+      with Authorizations {
   override def toString() = "%s(%s,%s)".format(getClass.getSimpleName, user,"*"*pass.size)
 }
 
