@@ -7,22 +7,47 @@ import com.ning.http.client.RequestBuilder
 //application/vnd.github.VERSION.raw
 trait Git { self: Requests =>
   def repo(user: String, repo: String) = new {
+    case class TreeQueryBuilder(sha: String, recur: Option[Int] = None)
+       extends Client.Completion {
+
+      def recusive = copy(recur = Some(1))
+
+      override def apply[T](handler: Client.Handler[T]) =
+        request(apiHost / "repos" / user / repo / "git" / "trees" / sha <<? pmap)(handler)
+      private def pmap = Map.empty[String, String] ++ recur.map("recusive" -> _.toString)
+    }
+
+    case class BlobQueryBuilder(sha: String, rawval: Boolean = false)
+       extends Client.Completion {
+
+      def raw = copy(rawval = true)
+
+      override def apply[T](handler: Client.Handler[T]) = {
+        val req = apiHost / "repos" / user / repo / "git" / "blobs" / sha
+        request(if (rawval) req <:< Map("Accept" -> Types.Raw) else req)(handler)
+      }
+    }
 
     // blobs
-    def blob(sha: String, encoding: String) =
-      complete(apiHost / "repos" / user / repo / "blobs" / sha)
+    
+    def blob(sha: String) =
+      BlobQueryBuilder(sha)
 
-    def newBlob(content: String, encoding: String) =
-      complete(apiHost.POST / "repos" / user / repo / "blobs")
+    def newBlob(content: String, encoding: String = "utf-8") =
+      complete(apiHost.POST / "repos" / user / repo / "git" / "blobs" << {
+        import net.liftweb.json._
+        import net.liftweb.json.JsonDSL._
+        compact(render(("content" -> content) ~ ("encoding" -> encoding)))
+      })
 
     // commits
     def commit(sha: String) =
-      complete(apiHost / "repos" / user / repo / "commits" / sha)
+      complete(apiHost / "repos" / user / repo / "git" / "commits" / sha)
 
     // http://developer.github.com/v3/git/commits/#create-a-commit
 
     def newCommit(message: String, tree: String, parents: Traversable[String]) =
-      complete(apiHost.POST / "repos" / user / repo / "commits")
+      complete(apiHost.POST / "repos" / user / repo / "git" / "commits")
 
 
     // refs
@@ -44,15 +69,15 @@ trait Git { self: Requests =>
     // tags
 
     def tag(sha: String) =
-      complete(apiHost / "repos" / user / repo / "tags" / sha)
+      complete(apiHost / "repos" / user / repo / "git" / "tags" / sha)
 
     def newTag(tag: String, msg: String, obj: String, tpe: String) =
-      complete(apiHost.POST / "repos" / user / repo / "tags")
+      complete(apiHost.POST / "repos" / user / repo / "git" / "tags")
 
     def tree(sha: String, recursive: Boolean = false) =
-      complete(apiHost / "repos" / user / repo / "trees" / sha)
+      TreeQueryBuilder(sha)
 
     def newTree(sha: String, basetree: Option[String] = None, tree: Traversable[String]) =
-      complete(apiHost.POST / "repos" / user / repo / "trees" / sha)
+      complete(apiHost.POST / "repos" / user / repo / "git" / "trees" / sha)
   } 
 }

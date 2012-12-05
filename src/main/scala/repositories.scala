@@ -57,6 +57,9 @@ trait Repositories { self: Requests =>
   def orgRepos(org: String) =
     complete(apiHost / "orgs" / org / "repos")
 
+  def respositories =
+    complete(apiHost / "repositories")
+
   def newRepo(name: String) =
     RepoBuilder(name)
 
@@ -64,29 +67,29 @@ trait Repositories { self: Requests =>
     RepoBuilder(name, org = Some(org))
 
   def userRepo(user: String, repo: String) =
-    complete(apiHost / "users" / user / repo)
+    complete(apiHost / "repos" / user / repo)
 
   def userRepoEdit(user: String, repo: String) =
-    complete(apiHost.PATCH / "users" / user / repo)
+    complete(apiHost.PATCH / "repos" / user / repo)
 
   def contributors(user: String, repo: String) =
-    complete(apiHost / "users" / user / repo / "contributors")
+    complete(apiHost / "repos" / user / repo / "contributors")
 
   def languages(user: String, repo: String) =
-    complete(apiHost / "users" / user / repo / "languages")
+    complete(apiHost / "repos" / user / repo / "languages")
 
   def teams(user: String, repo: String) =
-    complete(apiHost / "users" / user / repo / "teams")
+    complete(apiHost / "repos" / user / repo / "teams")
 
   def tags(user: String, repo: String) =
-    complete(apiHost / "users" / user / repo / "tags")
+    complete(apiHost / "repos" / user / repo / "tags")
 
   def branches(user: String, repo: String) =
-    complete(apiHost / "users" / user / repo / "branches")
+    complete(apiHost / "repos" / user / repo / "branches")
 
   def branch(user: String, repo: String, br: String) =
-    complete(apiHost / "users" / user / repo / "branches" / br)
+    complete(apiHost / "repos" / user / repo / "branches" / br)
 
   def debranch(user: String, repo: String, br: String) =
-    complete(apiHost.DELETE / "users" / user / repo / "branches" / br)
+    complete(apiHost.DELETE / "repos" / user / repo / "branches" / br)
 }
