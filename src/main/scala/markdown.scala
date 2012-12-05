@@ -3,12 +3,12 @@ package hubcat
 import dispatch._
 import com.ning.http.client.RequestBuilder
 
-// todo: support raw
 trait Markdown { self: Requests =>
   case class MarkdownBuilder(text: String,
                              modeval: Option[String] = None,
                              contextval: Option[String] = None)
-     extends Client.Completion {
+     extends Client.Completion
+        with Jsonizing {
 
     def context(user: String, repo: String) =
       copy(contextval = Some("%s/%s" format(user, repo)))
@@ -18,12 +18,17 @@ trait Markdown { self: Requests =>
       copy(modeval = Some("gfm"))
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(apiHost.POST / "markdown" << pmap)(handler)
+      request(apiHost.POST / "markdown" << pjson)(handler)
 
-    private def pmap =
-      Map("text" -> text) ++
-       modeval.map("mode" -> _) ++
-       contextval.map("context" -> _)
+    private def pjson = {
+      import net.liftweb.json._
+      import net.liftweb.json.JsonDSL._
+      val js = ("text" -> text) ~
+               ("mode" -> jStringOrNone(modeval)) ~
+               ("context" -> jStringOrNone(contextval))
+
+      compact(render(js))
+    }
   }
 
   def markdown(text: String) = MarkdownBuilder(text)
