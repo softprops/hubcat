@@ -3,7 +3,13 @@ package hubcat
 import dispatch._
 import com.ning.http.client.RequestBuilder
 
+object Markdown {
+  def Plain = "markdown"
+  def Gfm = "gfm"
+}
+
 trait Markdown { self: Requests =>
+  import Markdown._
   case class MarkdownBuilder(text: String,
                              modeval: Option[String] = None,
                              contextval: Option[String] = None)
@@ -13,9 +19,9 @@ trait Markdown { self: Requests =>
     def context(user: String, repo: String) =
       copy(contextval = Some("%s/%s" format(user, repo)))
     def plain =
-      copy(modeval = Some("markdown"))
+      copy(modeval = Some(Plain))
     def githubFlavored =
-      copy(modeval = Some("gfm"))
+      copy(modeval = Some(Gfm))
 
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost.POST / "markdown" << pjson)(handler)

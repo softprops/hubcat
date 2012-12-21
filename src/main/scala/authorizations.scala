@@ -4,6 +4,7 @@ import dispatch._
 import com.ning.http.client.RequestBuilder
 
 trait Authorizations { self: Requests =>
+  protected [this]
   case class AuthorizationBuilder(scopesval: Option[Seq[String]] = None,
                                   noteval: Option[String] = None,
                                   urlval: Option[String] = None, 
@@ -33,6 +34,7 @@ trait Authorizations { self: Requests =>
     }
   }
 
+  protected [this]
   case class ReauthorizeBuilder(id: String,
                                 scopesval: Option[Seq[String]] = None,
                                 scopeop: Option[Boolean] = None,
@@ -70,18 +72,23 @@ trait Authorizations { self: Requests =>
     } 
   }
 
+  /** fetch authorizations (http://developer.github.com/v3/oauth/#list-your-authorizations) */
   def authorizations =
     complete(apiHost / "authorizations")
 
+  /** fetch one authorization (http://developer.github.com/v3/oauth/#get-a-single-authorization) */
   def authorization(id: String) =
     complete(apiHost / "authorizations" / id)
 
+  /** create a new authorization (http://developer.github.com/v3/oauth/#create-a-new-authorization) */
   def authorize =
     AuthorizationBuilder()
 
+  /** update an existing authorization (http://developer.github.com/v3/oauth/#update-an-existing-authorization) */
   def reauthorize(id: String) =
     ReauthorizeBuilder(id)
 
+  /** undo an authorization (http://developer.github.com/v3/oauth/#delete-an-authorization) */
   def deauthorize(id: String) =
     complete(apiHost.DELETE / "authorizations" / id)
 }

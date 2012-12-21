@@ -1,0 +1,24 @@
+### 0.1.0
+
+A very simple interface for the Github [API](http://developer.github.com/)
+
+### goals
+
+- do as little as possible while providing much of what you need
+
+### what it does
+
+- handle authentication details
+- profile a fluent builder interface for composing requests
+
+### what it does not
+
+- make any assuptions about how you want to handle responses
+- parse responses
+- profile response modeling
+
+### try it out
+
+    libraryDependencies += "me.lessis" %% "0.1.0" % "hubcat"
+
+For more info see the [readme](https://github.com/softprops/hubcat#readme)

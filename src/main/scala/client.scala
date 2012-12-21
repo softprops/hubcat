@@ -23,7 +23,6 @@ abstract class Requests(credentials: Credentials, http: Http = Http)
 case class Client(token: String, http: Http = Http)
    extends Requests(OAuth2(token), http)
       with Gists
-      with Git
       with Issues
       with Markdown
       with Searching

@@ -4,7 +4,7 @@ import dispatch._
 import com.ning.http.client.RequestBuilder
 
 trait Searching { self: Requests =>
-  def search = new {
+  object Search {
     def issues(user: String, repo: String, open: Boolean, term: String) =
       complete(apiHost / "legacy" /  "issues" / user / repo / (if(open) "open" else "closed") / term)
 
@@ -14,4 +14,6 @@ trait Searching { self: Requests =>
     def user(term: String) =
       complete(apiHost / "legacy" / "user" / "search" / term)
   }
+
+  def search = Search
 }
