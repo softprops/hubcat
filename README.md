@@ -61,7 +61,8 @@ for {
   JField("token", JString(token)) <- fields
 } yield {
   val contrib = new Client(token).
-                     contributors(user, repo)
+                     repo(user, repo).
+                     contributors
   (for {
     JObject(cfields)     <- contrib(as.lift.Json)()
     JField("login", JString(login))      <- cfields
