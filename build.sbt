@@ -8,6 +8,9 @@ description := "a vvip client of the github enterprises"
 
 libraryDependencies += "net.databinder.dispatch" %% "dispatch-lift-json" % "0.9.5"
 
+crossScalaVersions :=
+      Seq("2.8.1", "2.8.2", "2.9.0-1", "2.9.1", "2.9.1-1", "2.9.2")
+
 scalacOptions += Opts.compile.deprecation
 
 publishTo := Some(Opts.resolver.sonatypeStaging)
