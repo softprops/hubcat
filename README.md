@@ -2,6 +2,12 @@
 
 hip cats, git hubs, good times.
 
+## install
+
+In sbt...
+
+    libraryDependencies += "me.lessis" %% "hubcat" % "0.1.0"
+
 ## goals
 
 - do as __little__ as possible while providing much of what you __need__.
