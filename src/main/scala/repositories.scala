@@ -9,8 +9,7 @@ import com.ning.http.client.RequestBuilder
 // cli.user(foo).repos....
 // cli.repo(user, repo)...
 trait Repositories { self: Requests =>
-  protected [this]
-  case class RepoBuilder(name: String,
+  protected [this] case class RepoBuilder(name: String,
                          org: Option[String] = None,
                          descval: Option[String] = None,
                          teamId: Option[Int] = None,
@@ -184,5 +183,80 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
       complete(apiHost / "repos" / user / repo / "branches" / br)
 
     def debranch(br: String) =
-      complete(apiHost.DELETE / "repos" / user / repo / "branches" / br)    
+      complete(apiHost.DELETE / "repos" / user / repo / "branches" / br)
+
+    protected [this]
+    object Hooks extends Client.Completion with Jsonizing {
+      private [this] def base = apiHost / "repos" / user / repo / "hooks"
+
+      protected [this]
+      case class Hook(name: String,
+                      id: Option[String],
+                      configval: Map[String, Any] = Map.empty[String, Any],
+                      eventsval: List[String] = List("push"),
+                      activeval: Option[Boolean] = None,
+                      addeventsval: List[String] = Nil,
+                      rmeventsval: List[String] = Nil)
+         extends Client.Completion {
+
+         def config(props: (String, Any)*) =
+           copy(configval = props.toMap)
+
+         def events(es: String*) =
+           copy(eventsval = es.toList)
+
+         def addEvents(es: String*) =
+           id match {
+             case Some(_) => copy(addeventsval = es.toList)
+             case _ => copy(eventsval = eventsval ::: es.toList)
+           }
+
+         def removeEvents(es: String*) =
+           id match {
+             case Some(_) => copy(rmeventsval = es.toList)
+             case _ => this
+           }
+
+         def active(is: Boolean) =
+           copy(activeval = Some(is))
+
+         override def apply[T](hand: Client.Handler[T]) =
+           request(id.map(base.PATCH / _).getOrElse(base.POST) << pmap)(hand)
+
+         private def pmap = {
+           import net.liftweb.json._
+           import net.liftweb.json.JsonDSL._
+           val json = ("name" -> name) ~ ("events" -> eventsval) ~ ("active" -> jBoolOrNone(activeval))
+           val confd = if (configval.isEmpty) json else json ~ ("config" -> configval.map {
+             case (k, v) => (k -> v.toString)
+           })
+           compact(render(if (id.isDefined) confd ~ ("add_events" -> addeventsval) ~ ("remove_events" -> rmeventsval)
+           else confd))
+         }
+      }
+
+      /** http://developer.github.com/v3/repos/hooks/#list */
+      override def apply[T](hand: Client.Handler[T]) =
+        request(base)(hand)
+
+      /** http://developer.github.com/v3/repos/hooks/#get-single-hook */
+      def apply(id: String) =
+        complete(base / id)
+
+      /** http://developer.github.com/v3/repos/hooks/#create-a-hook */
+      /** http://developer.github.com/v3/repos/hooks/#edit-a-hook */
+
+      /** http://developer.github.com/v3/repos/hooks/#test-a-hook */
+      def test(id: String) =
+        complete(base.POST / id / "tests")
+
+      /** http://developer.github.com/v3/repos/hooks/#delete-a-hook */
+      def delete(id: String) =
+        complete(base.DELETE / id)
+
+      /** http://developer.github.com/v3/repos/hooks/#pubsubhubbub */
+    }
+
+    def hooks = Hooks
+
   }
