@@ -37,8 +37,9 @@ trait Repositories { self: Requests =>
            .getOrElse(apiHost.POST / "user" / "repos") << pjson)(handler)
 
     private def pjson = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val js =
         ("name" -> name) ~
         ("description" -> jStringOrNone(descval)) ~
@@ -224,8 +225,9 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
            request(id.map(base.PATCH / _).getOrElse(base.POST) << pmap)(hand)
 
          private def pmap = {
-           import net.liftweb.json._
-           import net.liftweb.json.JsonDSL._
+           import org.json4s.JsonDSL._
+           import org.json4s.native.Printer.compact
+           import org.json4s.native.JsonMethods.render
            val json = ("name" -> name) ~ ("events" -> eventsval) ~ ("active" -> jBoolOrNone(activeval))
            val confd = if (configval.isEmpty) json else json ~ ("config" -> configval.map {
              case (k, v) => (k -> v.toString)

@@ -23,8 +23,9 @@ trait Gists { self: Requests =>
       request(apiHost.POST / "gists" << pjson)(handler)
 
     private def pjson = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val js =
         ("public" -> vis) ~ 
         ("description" -> jStringOrNone(descval)) ~
@@ -50,8 +51,9 @@ trait Gists { self: Requests =>
       request(apiHost.PATCH / "gists" / id << pjson)(handler)
 
     private def pjson = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val js =
         ("description" -> jStringOrNone(descval)) ~
         ("files" -> filevals.map {
@@ -104,8 +106,9 @@ trait Gists { self: Requests =>
 
            /** http://developer.github.com/v3/gists/comments/#edit-a-comment */
            def edit(body: String) = {
-             import net.liftweb.json._
-             import net.liftweb.json.JsonDSL._         
+             import org.json4s.JsonDSL._
+             import org.json4s.native.Printer.compact
+             import org.json4s.native.JsonMethods.render
              complete(apiHost.PATCH / "gists" / id / "comments" / cid.toString << compact(render(("body" -> body))))
            }
 
@@ -123,8 +126,9 @@ trait Gists { self: Requests =>
 
        /** http://developer.github.com/v3/gists/comments/#create-a-comment */
        def comment(body: String) = {
-         import net.liftweb.json._
-         import net.liftweb.json.JsonDSL._         
+         import org.json4s.JsonDSL._
+         import org.json4s.native.Printer.compact
+         import org.json4s.native.JsonMethods.render
          complete(apiHost.POST / "gists" / id / "comments" << compact(render(("body" -> body))))
        }
          

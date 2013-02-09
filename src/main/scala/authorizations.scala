@@ -21,8 +21,9 @@ trait Authorizations { self: Requests =>
       request(apiHost.POST / "authorizations" << pjson)(handler)
 
     private def pjson = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val base: JObject = 
         ("scopes" -> scopesval.map(_.toList).getOrElse(Nil)) ~
         ("note" -> jStringOrNone(noteval)) ~
@@ -56,8 +57,9 @@ trait Authorizations { self: Requests =>
       request(apiHost.POST / "authorizations" / id << pjson)(handler)
 
     private def pjson = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val note =
         ("note" -> jStringOrNone(noteval)) ~
         ("note_url" -> jStringOrNone(urlval))

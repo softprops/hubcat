@@ -27,8 +27,9 @@ trait Markdown { self: Requests =>
       request(apiHost.POST / "markdown" << pjson)(handler)
 
     private def pjson = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val js = ("text" -> text) ~
                ("mode" -> jStringOrNone(modeval)) ~
                ("context" -> jStringOrNone(contextval))

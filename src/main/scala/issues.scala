@@ -140,8 +140,9 @@ trait RepoIssues { self: RepoRequests  =>
       ) << pjson)(handler)
 
     private def pjson = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val js =
         ("title" -> jStringOrNone(titleval)) ~
         ("body" -> jStringOrNone(bodyval)) ~
@@ -193,8 +194,9 @@ trait RepoIssues { self: RepoRequests  =>
 
    /** http://developer.github.com/v3/issues/labels/#create-a-label */
    def create(name: String, color: String) = {
-     import net.liftweb.json._
-     import net.liftweb.json.JsonDSL._
+     import org.json4s.JsonDSL._
+     import org.json4s.native.Printer.compact
+     import org.json4s.native.JsonMethods.render
      val js =
        ("name" -> name) ~
        ("color" -> color)
@@ -203,8 +205,9 @@ trait RepoIssues { self: RepoRequests  =>
 
    /** http://developer.github.com/v3/issues/labels/#update-a-label */
    def edit(name: String, color: String) = {
-     import net.liftweb.json._
-     import net.liftweb.json.JsonDSL._
+     import org.json4s.JsonDSL._
+     import org.json4s.native.Printer.compact
+     import org.json4s.native.JsonMethods.render
      val js =
        ("name" -> name) ~
        ("color" -> color)
@@ -234,16 +237,18 @@ trait RepoIssues { self: RepoRequests  =>
 
     /** http://developer.github.com/v3/issues/labels/#add-labels-to-an-issue */
     def label(labs: String*) = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val js = JArray(labs.toList map(new JString(_)))
       complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "labels" << compact(render(js)))
     }
 
     /** http://developer.github.com/v3/issues/labels/#replace-all-labels-for-an-issue */
     def relabel(labs: String*) = {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       val js = JArray(labs.toList map(new JString(_)))
       complete(apiHost.PATCH / "repos" / user / repo / "issues" / id.toString / "labels" << compact(render(js)))
     }
@@ -268,14 +273,16 @@ trait RepoIssues { self: RepoRequests  =>
         complete(apiHost / "repos" / user / repo / "issues" / id.toString / "comments" / cid.toString)
 
       def create(body: String) = {
-        import net.liftweb.json._
-        import net.liftweb.json.JsonDSL._
+        import org.json4s.JsonDSL._
+        import org.json4s.native.Printer.compact
+        import org.json4s.native.JsonMethods.render
         complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "comments" << compact(render(("body" -> body))))
       }
 
       def edit(cid: Int, body: String) = {
-        import net.liftweb.json._
-        import net.liftweb.json.JsonDSL._
+        import org.json4s.JsonDSL._
+        import org.json4s.native.Printer.compact
+        import org.json4s.native.JsonMethods.render
         complete(apiHost.PATCH / "repos" / user / repo / "issues" / "comments" / cid.toString << compact(render(("body" -> body))))
       }
 

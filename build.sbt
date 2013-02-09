@@ -6,7 +6,7 @@ version := "0.1.0"
 
 description := "a vvip client of the github enterprises"
 
-libraryDependencies += "net.databinder.dispatch" %% "dispatch-lift-json" % "0.9.5"
+libraryDependencies += "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.9.5"
 
 crossScalaVersions :=
       Seq("2.8.2", "2.9.0-1", "2.9.1", "2.9.1-1", "2.9.2")

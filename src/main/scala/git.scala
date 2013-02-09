@@ -34,8 +34,9 @@ trait Git { self: RepoRequests =>
 
   def newBlob(content: String, encoding: String = "utf-8") =
     complete(apiHost.POST / "repos" / user / repo / "git" / "blobs" << {
-      import net.liftweb.json._
-      import net.liftweb.json.JsonDSL._
+      import org.json4s.JsonDSL._
+      import org.json4s.native.Printer.compact
+      import org.json4s.native.JsonMethods.render
       compact(render(("content" -> content) ~ ("encoding" -> encoding)))
     })
 
