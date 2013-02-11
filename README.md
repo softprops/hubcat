@@ -27,7 +27,7 @@ The choice of design is modeled after the library dispatch is based on which pro
 - make assumptions about what you want to do with responses
 
 In the spirit of dispatch, your interface for responses is a just function. It just happens to have
-the same function signature dispatch uses for handlers of responses: `(com.ning.http.client.Response => T)`
+the same function signature dispatch uses for handlers of responses: `com.ning.http.client.AsyncResponse[T]`
 
 All builder methods define a method `apply[T](hand: Client.Handler[T]): Promise[T]` so, at any point,
 you can provide a handler function and get back a dispatch Promise to compose with other promises to process a chain of responses.
@@ -49,7 +49,7 @@ There is probably already a dispatch interface out there for the one you are usi
 Get a list of contributors for repo ranked by contribution
 
 ```scala
-import hubcat._; import dispatch._; import net.liftweb.json._
+import hubcat._; import dispatch._; import org.json4s._
 val (login, pass) = ("yrlogin", "yrpass")
 val (user, repo) = ("dispatch", "reboot")
 val auth = new AuthorizationClient(login, pass).
@@ -57,16 +57,16 @@ val auth = new AuthorizationClient(login, pass).
                  scopes("repo").
                  note("just for fun")
 for {
-  JObject(fields)   <- auth(as.lift.Json)()
-  JField("token", JString(token)) <- fields
+  JObject(fields)           <- auth(as.json4s.Json)()
+  ("token", JString(token)) <- fields
 } yield {
   val contrib = new Client(token).
                      repo(user, repo).
                      contributors
   (for {
-    JObject(cfields)     <- contrib(as.lift.Json)()
-    JField("login", JString(login))      <- cfields
-    JField("contributions", JInt(count)) <- cfields
+    JObject(cfields)               <- contrib(as.json4s.Json)()
+    ("login", JString(login))      <- cfields
+    ("contributions", JInt(count)) <- cfields
   } yield (login, count)).sortBy(_._2).reverse
 }.foreach {
   case (l, c) => println("%-15s - %s" format(l, c))
