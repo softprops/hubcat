@@ -4,6 +4,11 @@ import dispatch._
 import com.ning.http.client.RequestBuilder
 import java.util.Date
 
+import org.json4s.{ JArray, JString }
+import org.json4s.JsonDSL._
+import org.json4s.native.Printer.compact
+import org.json4s.native.JsonMethods.render
+
 // cli.issues
 // cli.userissues
 // cli.orgissues
@@ -140,9 +145,6 @@ trait RepoIssues { self: RepoRequests  =>
       ) << pjson)(handler)
 
     private def pjson = {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
       val js =
         ("title" -> jStringOrNone(titleval)) ~
         ("body" -> jStringOrNone(bodyval)) ~
@@ -194,9 +196,6 @@ trait RepoIssues { self: RepoRequests  =>
 
    /** http://developer.github.com/v3/issues/labels/#create-a-label */
    def create(name: String, color: String) = {
-     import org.json4s.JsonDSL._
-     import org.json4s.native.Printer.compact
-     import org.json4s.native.JsonMethods.render
      val js =
        ("name" -> name) ~
        ("color" -> color)
@@ -205,9 +204,6 @@ trait RepoIssues { self: RepoRequests  =>
 
    /** http://developer.github.com/v3/issues/labels/#update-a-label */
    def edit(name: String, color: String) = {
-     import org.json4s.JsonDSL._
-     import org.json4s.native.Printer.compact
-     import org.json4s.native.JsonMethods.render
      val js =
        ("name" -> name) ~
        ("color" -> color)
@@ -237,21 +233,18 @@ trait RepoIssues { self: RepoRequests  =>
 
     /** http://developer.github.com/v3/issues/labels/#add-labels-to-an-issue */
     def label(labs: String*) = {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
-      val js = JArray(labs.toList map(new JString(_)))
+      val js = jlabs(labs.toList)
       complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "labels" << compact(render(js)))
     }
 
     /** http://developer.github.com/v3/issues/labels/#replace-all-labels-for-an-issue */
     def relabel(labs: String*) = {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
-      val js = JArray(labs.toList map(new JString(_)))
+      val js = jlabs(labs.toList)
       complete(apiHost.PATCH / "repos" / user / repo / "issues" / id.toString / "labels" << compact(render(js)))
     }
+
+    private def jlabs(labs: List[String]) =
+      JArray(labs.map(new JString(_)))
 
     /** http://developer.github.com/v3/issues/labels/#remove-all-labels-from-an-issue */
     def delabel = 
@@ -272,19 +265,11 @@ trait RepoIssues { self: RepoRequests  =>
       def get(cid: Int) =
         complete(apiHost / "repos" / user / repo / "issues" / id.toString / "comments" / cid.toString)
 
-      def create(body: String) = {
-        import org.json4s.JsonDSL._
-        import org.json4s.native.Printer.compact
-        import org.json4s.native.JsonMethods.render
+      def create(body: String) =
         complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "comments" << compact(render(("body" -> body))))
-      }
 
-      def edit(cid: Int, body: String) = {
-        import org.json4s.JsonDSL._
-        import org.json4s.native.Printer.compact
-        import org.json4s.native.JsonMethods.render
+      def edit(cid: Int, body: String) =
         complete(apiHost.PATCH / "repos" / user / repo / "issues" / "comments" / cid.toString << compact(render(("body" -> body))))
-      }
 
       def delete(cid: Int) =
         complete(apiHost.DELETE / "repos" / user / repo / "issues" / "comments" / cid.toString)

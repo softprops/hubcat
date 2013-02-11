@@ -3,6 +3,10 @@ package hubcat
 import dispatch._
 import com.ning.http.client.RequestBuilder
 
+import org.json4s.JsonDSL._
+import org.json4s.native.Printer.compact
+import org.json4s.native.JsonMethods.render
+
 trait Authorizations { self: Requests =>
   protected [this]
   case class AuthorizationBuilder(scopesval: Option[Seq[String]] = None,
@@ -21,10 +25,7 @@ trait Authorizations { self: Requests =>
       request(apiHost.POST / "authorizations" << pjson)(handler)
 
     private def pjson = {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
-      val base: JObject = 
+      val base = 
         ("scopes" -> scopesval.map(_.toList).getOrElse(Nil)) ~
         ("note" -> jStringOrNone(noteval)) ~
         ("note_url" -> jStringOrNone(urlval))
@@ -57,9 +58,6 @@ trait Authorizations { self: Requests =>
       request(apiHost.POST / "authorizations" / id << pjson)(handler)
 
     private def pjson = {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
       val note =
         ("note" -> jStringOrNone(noteval)) ~
         ("note_url" -> jStringOrNone(urlval))

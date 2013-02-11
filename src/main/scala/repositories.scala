@@ -3,6 +3,10 @@ package hubcat
 import dispatch._
 import com.ning.http.client.RequestBuilder
 
+import org.json4s.JsonDSL._
+import org.json4s.native.Printer.compact
+import org.json4s.native.JsonMethods.render
+
 // cli.repositories.all
 // cli.repositories.owned
 // cli.repositories.create(name).desc(...)...
@@ -37,9 +41,6 @@ trait Repositories { self: Requests =>
            .getOrElse(apiHost.POST / "user" / "repos") << pjson)(handler)
 
     private def pjson = {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
       val js =
         ("name" -> name) ~
         ("description" -> jStringOrNone(descval)) ~
@@ -225,9 +226,6 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
            request(id.map(base.PATCH / _).getOrElse(base.POST) << pmap)(hand)
 
          private def pmap = {
-           import org.json4s.JsonDSL._
-           import org.json4s.native.Printer.compact
-           import org.json4s.native.JsonMethods.render
            val json = ("name" -> name) ~ ("events" -> eventsval) ~ ("active" -> jBoolOrNone(activeval))
            val confd = if (configval.isEmpty) json else json ~ ("config" -> configval.map {
              case (k, v) => (k -> v.toString)
