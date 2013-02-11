@@ -265,4 +265,29 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
 
     def hooks = Hooks
 
-  }
+    /** http://developer.github.com/v3/repos/hooks/#pubsubhubbub */
+    protected [this]
+    case class PubHub(mode: String,
+                      event: String,
+                      callback: String,
+                      secretval: Option[String] = None)
+        extends Client.Completion {
+      private [this] def base = apiHost / "hub"
+      def secret(sec: String) = copy(secretval = Some(sec))
+
+      override def apply[T](hand: Client.Handler[T]) =
+        request(base.POST << pmap)(hand)
+
+      private def pmap = Map(
+        "hub.mode" -> mode,
+        "hub.topic" -> "http://github.com/%s/%s/events/%s".format(user, repo, event),
+        "hub.callback" -> callback) ++
+        secretval.map("hub.secret" -> _)
+    }
+
+    def subscribe(event: String, callback: String) =
+      PubHub("subscribe", event, callback)
+
+    def unsubscribe(event: String, callback: String) =
+      PubHub("unsubscribe", event, callback)
+}
