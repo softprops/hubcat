@@ -193,7 +193,7 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
 
       protected [this]
       case class Hook(name: String,
-                      id: Option[String],
+                      id: Option[String] = None,
                       configval: Map[String, Any] = Map.empty[String, Any],
                       eventsval: List[String] = List("push"),
                       activeval: Option[Boolean] = None,
@@ -244,6 +244,12 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
         complete(base / id)
 
       /** http://developer.github.com/v3/repos/hooks/#create-a-hook */
+      def create(name: String) =
+        Hook(name)
+
+      def edit(id: String, name: String) =
+        Hook(name, Some(id))
+
       /** http://developer.github.com/v3/repos/hooks/#edit-a-hook */
 
       /** http://developer.github.com/v3/repos/hooks/#test-a-hook */
