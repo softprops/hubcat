@@ -258,8 +258,6 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
       /** http://developer.github.com/v3/repos/hooks/#delete-a-hook */
       def delete(id: String) =
         complete(base.DELETE / id)
-
-      /** http://developer.github.com/v3/repos/hooks/#pubsubhubbub */
     }
 
     def hooks = Hooks
