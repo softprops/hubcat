@@ -247,10 +247,9 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
       def create(name: String) =
         Hook(name)
 
+      /** http://developer.github.com/v3/repos/hooks/#edit-a-hook */
       def edit(id: String, name: String) =
         Hook(name, Some(id))
-
-      /** http://developer.github.com/v3/repos/hooks/#edit-a-hook */
 
       /** http://developer.github.com/v3/repos/hooks/#test-a-hook */
       def test(id: String) =
