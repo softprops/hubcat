@@ -275,13 +275,17 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
       private [this] def base = apiHost / "hub"
       def secret(sec: String) = copy(secretval = Some(sec))
 
+      // fixme: will get Needs hub.callback if params
+      // provided in request body. escaping issue?
       override def apply[T](hand: Client.Handler[T]) =
-        request(base.POST << pmap)(hand)
+        request(base.POST <<? pmap)(hand)
 
       private def pmap = Map(
         "hub.mode" -> mode,
-        "hub.topic" -> "http://github.com/%s/%s/events/%s".format(user, repo, event),
-        "hub.callback" -> callback) ++
+        "hub.callback" -> callback,
+        "hub.topic" -> "https://github.com/%s/%s/events/%s"
+                        .format(user, repo, event)
+        ) ++
         secretval.map("hub.secret" -> _)
     }
 
