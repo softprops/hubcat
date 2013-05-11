@@ -7,6 +7,8 @@ import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
 
+import scala.concurrent.Future
+
 // cli.repositories.all
 // cli.repositories.owned
 // cli.repositories.create(name).desc(...)...
@@ -141,7 +143,7 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
        with RepoIssues {
 
     // for mixins
-    def request[T](req: RequestBuilder)(handler: Client.Handler[T]): Promise[T] =
+    def request[T](req: RequestBuilder)(handler: Client.Handler[T]): Future[T] =
       requests.request(req)(handler)
     def complete(req: RequestBuilder): Client.Completion =
       requests.complete(req)

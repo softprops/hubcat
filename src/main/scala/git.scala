@@ -9,13 +9,14 @@ trait Git { self: RepoRequests =>
   case class TreeQueryBuilder(sha: String, recur: Option[Int] = None)
      extends Client.Completion {
 
-    def recusive = copy(recur = Some(1))
+    def recursive = copy(recur = Some(1))
 
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost / "repos" / user / repo / "git" / "trees" / sha <<? pmap)(handler)
     private def pmap = Map.empty[String, String] ++ recur.map("recusive" -> _.toString)
   }
 
+  /** http://developer.github.com/v3/git/blobs/ */
   case class BlobQueryBuilder(sha: String, rawval: Boolean = false)
      extends Client.Completion {
    
