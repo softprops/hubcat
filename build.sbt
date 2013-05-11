@@ -2,16 +2,15 @@ organization := "me.lessis"
 
 name := "hubcat"
 
-version := "0.1.0"
+version := "0.1.1"
 
 description := "a vvip client of the github enterprises"
 
-libraryDependencies += "net.databinder.dispatch" %% "json4s-native" % "0.9.4"
+libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.10.0")
 
-crossScalaVersions :=
-      Seq("2.8.2", "2.9.0-1", "2.9.1", "2.9.1-1", "2.9.2")
+crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1")
 
-scalacOptions += Opts.compile.deprecation
+scalacOptions ++= Seq(Opts.compile.deprecation, "-feature")
 
 publishTo := Some(Opts.resolver.sonatypeStaging)
 
@@ -42,3 +41,11 @@ pomExtra := (
 seq(lsSettings:_*)
 
 LsKeys.tags in LsKeys.lsync := Seq("github", "gist")
+
+seq(buildInfoSettings:_*)
+
+sourceGenerators in Compile <+= buildInfo
+
+buildInfoKeys := Seq[BuildInfoKey](version)
+
+buildInfoPackage := "hubcat"
