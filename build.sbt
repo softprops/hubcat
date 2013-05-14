@@ -8,7 +8,16 @@ description := "a vvip client of the github enterprises"
 
 libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.10.0")
 
+libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+
+fork in Test := true
+
+// passing env vars to tests is improved in sbt 0.13.0
+javaOptions in Test := Seq("GHUSER", "GHPASS").map(v => "-D%s=%s".format(v, System.getenv(v)))
+
 crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1")
+
+scalaVersion := "2.10.0"
 
 scalacOptions ++= Seq(Opts.compile.deprecation, "-feature")
 
