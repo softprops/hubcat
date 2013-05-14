@@ -77,8 +77,8 @@ trait Authorizations { self: Requests =>
     complete(apiHost / "authorizations")
 
   /** fetch one authorization (http://developer.github.com/v3/oauth/#get-a-single-authorization) */
-  def authorization(id: String) =
-    complete(apiHost / "authorizations" / id)
+  def authorization(id: Int) =
+    complete(apiHost / "authorizations" / id.toString)
 
   /** create a new authorization (http://developer.github.com/v3/oauth/#create-a-new-authorization) */
   def authorize =
@@ -89,6 +89,6 @@ trait Authorizations { self: Requests =>
     ReauthorizeBuilder(id)
 
   /** undo an authorization (http://developer.github.com/v3/oauth/#delete-an-authorization) */
-  def deauthorize(id: String) =
-    complete(apiHost.DELETE / "authorizations" / id)
+  def deauthorize(id: Int) =
+    complete(apiHost.DELETE / "authorizations" / id.toString)
 }
