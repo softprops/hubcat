@@ -27,6 +27,7 @@ class ClientSpec extends FunSpec {
         JObject(fs) <- ary
         ("id", JInt(id)) <- fs
       } yield id
+      assert(!auths.isEmpty)
       assert(auths.isEmpty == false)
     }
 
@@ -36,6 +37,7 @@ class ClientSpec extends FunSpec {
         JObject(fs) <- ary
         ("id", JInt(id)) <- fs
       } yield id
+      assert(!auths.isEmpty)
       assert(auths.forall( thisId => (for {
         JObject(fs) <- cli.authorization(thisId.toInt)(as.json4s.Json)()
         ("id", JInt(thatId)) <- fs
@@ -50,6 +52,7 @@ class ClientSpec extends FunSpec {
         ("note", JString(note)) <-fs
         if (note == TestNote)
       } yield id
+      assert(!auths.isEmpty)
       auths.map( id => cli.deauthorize(id.toInt)(as.String)())
       assert(auths.forall( id => (for {
         JObject(fs) <- cli.authorization(id.toInt)(as.json4s.Json)()
