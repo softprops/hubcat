@@ -10,16 +10,25 @@ libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
+// needed for java test options
 fork in Test := true
 
 // passing env vars to tests is improved in sbt 0.13.0
 javaOptions in Test := Seq("GHUSER", "GHPASS").map(v => "-D%s=%s".format(v, System.getenv(v)))
 
+seq((if (sys.env.getOrElse("TRAVIS", "false").toBoolean) Seq(
+  logLevel in Global := Level.Warn,
+  logLevel in Compile := Level.Warn,
+  logLevel in Test := Level.Info)
+     else Seq.empty[Project.Setting[_]]):_*)
+
 crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1")
 
 scalaVersion := "2.10.0"
 
-scalacOptions ++= Seq(Opts.compile.deprecation, "-feature")
+scalacOptions <++= (scalaVersion).map { sv =>
+  if (sv.startsWith("2.10")) Seq(Opts.compile.deprecation, "-feature") else Seq(Opts.compile.deprecation)
+}
 
 publishTo := Some(Opts.resolver.sonatypeStaging)
 
