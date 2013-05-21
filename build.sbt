@@ -20,6 +20,7 @@ seq((
   if (sys.env.getOrElse("TRAVIS", "false").toBoolean) {
     println("using travis")
     Seq(
+      ivyLoggingLevel := UpdateLogging.Quiet,
       logLevel in Global := Level.Warn,
       logLevel in Compile := Level.Warn,
       logLevel in Test := Level.Info)
