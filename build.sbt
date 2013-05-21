@@ -16,11 +16,18 @@ fork in Test := true
 // passing env vars to tests is improved in sbt 0.13.0
 javaOptions in Test := Seq("GHUSER", "GHPASS").map(v => "-D%s=%s".format(v, System.getenv(v)))
 
-seq((if (sys.env.getOrElse("TRAVIS", "false").toBoolean) Seq(
-  logLevel in Global := Level.Warn,
-  logLevel in Compile := Level.Warn,
-  logLevel in Test := Level.Info)
-     else Seq.empty[Project.Setting[_]]):_*)
+seq((
+  if (sys.env.getOrElse("TRAVIS", "false").toBoolean) {
+    println("using travis")
+    Seq(
+      logLevel in Global := Level.Warn,
+      logLevel in Compile := Level.Warn,
+      logLevel in Test := Level.Info)
+  } else {
+    println("not using travis")
+    Seq.empty[Project.Setting[_]]
+  }
+):_*)
 
 crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1")
 
