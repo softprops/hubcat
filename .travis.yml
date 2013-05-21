@@ -5,7 +5,7 @@ scala:
   - 2.9.3
 
 env: 
-  matrix: 
+  global:
   - secure: |-
       fl0pvO9Vsk64RlfW/WDe4YFmfnZgjXWZjfqUiL7zgDf1mSmkD2gju4cXiHk/
       zFYg5rnjmzfypH9WLOBrECEJhU1d6oP5TVsgpSuxaI/Zo04dkwmaL1UHcbCa
