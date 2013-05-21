@@ -1,16 +1,16 @@
+--- 
 language: scala
-scala:
-  - 2.10.1
-  - 2.10.0
-  - 2.9.3
-
+scala: 
+- 2.10.1
+- 2.10.0
+- 2.9.3
 env: 
-  global:
+  global: 
   - secure: |-
-      fl0pvO9Vsk64RlfW/WDe4YFmfnZgjXWZjfqUiL7zgDf1mSmkD2gju4cXiHk/
-      zFYg5rnjmzfypH9WLOBrECEJhU1d6oP5TVsgpSuxaI/Zo04dkwmaL1UHcbCa
-      txQTnuz74AGRueXj0LlA0/sBLRFhjITlgEYgVF3t5LxukkWfvvs=
+      kohPC5/C6l4Z09eYxpLgPiHnH8MCGIb6cZjLsoMqwGxXVSwmoVnxEjqFa5gU
+      D1kmAD4+2tkVHyEy8CbsC4fvRnSjSI/KBMdY86c1xJUnqK+sTZhtp7pMFOFz
+      MunVaEqkz2VwlnCXKHMcqSOqJ0sg9erpjpPagw6KA9nk9Qmr404=
   - secure: |-
-      XG1x04fBY38xseuGYyyTs78FrKqTso6zDMd0oB4MkbEwia7qeX2xbE1q+hWp
-      s9DIMlTiuqqE6xOqiPMg9ObFlO/2D+CloscA1ZT7M8jMKme4bMQ/yBy/8pIE
-      nHRMU/ui2o4wI07GqaKKqrJsdHm51/zO4ypyw/4aNxUz3l8HeQE=
+      MUZak55UHBoJEFDtC5vvK4I29lPlIw9R2Hh9Gwou/XmmH1d6yZqpe8AeH/hy
+      nuraQm8dUOGaEZjxUOW29pou9q7v8/tp74YDyvTENg3n9W+hHZtN3g1wfnSM
+      EdNSp7GLCl4SOwPVJQfJowswtw0t2ZE3+WTgJ/D7j4R1B0tMn6k=
