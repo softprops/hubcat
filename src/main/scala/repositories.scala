@@ -15,44 +15,46 @@ import scala.concurrent.Future
 // cli.user(foo).repos....
 // cli.repo(user, repo)...
 trait Repositories { self: Requests =>
-  protected [this] case class RepoBuilder(name: String,
-                         org: Option[String] = None,
-                         descval: Option[String] = None,
-                         teamId: Option[Int] = None,
-                         homepageval: Option[String] = None,
-                         hasIssues: Boolean = true,
-                         hasWiki: Boolean = true,
-                         hasDownloads: Boolean = true,
-                         autoinit: Boolean = false,
-                         ignoreTemplate: Option[String] = None)
-     extends Client.Completion
+  /** Builder for creating repositories */
+  protected [this] case class RepoBuilder(
+    name: String,
+    _org: Option[String] = None,
+    _desc: Option[String] = None,
+    _teamId: Option[Int] = None,
+    _homepage: Option[String] = None,
+    _hasIssues: Boolean = true,
+    _hasWiki: Boolean = true,
+    _hasDownloads: Boolean = true,
+    _autoinit: Boolean = false,
+    _ignoreTemplate: Option[String] = None)
+    extends Client.Completion
         with Jsonizing {
 
-    def desc(d: String) = copy(descval = Some(d))
-    def homepage(h: String) = copy(homepageval = Some(h))
-    def issues(b: Boolean) = copy(hasIssues = b)
-    def wiki(b: Boolean) = copy(hasWiki = b)
-    def downloads(b: Boolean) = copy(hasDownloads = b)
-    def team(id: Int) = copy(teamId = Some(id))
-    def autoInit(a: Boolean) = copy(autoinit = a)
-    def gitignoreTemplate(t: String) = copy(ignoreTemplate = Some(t))
-    def underOrganization(o: String) = copy(org = Some(o))
+    def desc(d: String) = copy(_desc = Some(d))
+    def homepage(h: String) = copy(_homepage = Some(h))
+    def issues(b: Boolean) = copy(_hasIssues = b)
+    def wiki(b: Boolean) = copy(_hasWiki = b)
+    def downloads(b: Boolean) = copy(_hasDownloads = b)
+    def team(id: Int) = copy(_teamId = Some(id))
+    def autoInit(a: Boolean) = copy(_autoinit = a)
+    def gitignoreTemplate(t: String) = copy(_ignoreTemplate = Some(t))
+    def underOrganization(o: String) = copy(_org = Some(o))
     override def apply[T](handler: Client.Handler[T]) =
       request(
-        org.map(o => apiHost.POST / "orgs" / o / "repos")
-           .getOrElse(apiHost.POST / "user" / "repos") << pjson)(handler)
+        _org.map(o => apiHost.POST / "orgs" / o / "repos")
+            .getOrElse(apiHost.POST / "user" / "repos") << pjson)(handler)
 
     private def pjson = {
       val js =
         ("name" -> name) ~
-        ("description" -> jStringOrNone(descval)) ~
-        ("homepage" -> jStringOrNone(homepageval)) ~
-        ("has_issues" -> hasIssues) ~
-        ("has_wiki" -> hasWiki) ~
-        ("has_downloads" -> hasDownloads) ~
-        ("team_id" -> jIntOrNone(teamId)) ~
-        ("auto_init" -> autoinit) ~
-        ("gitignore_template" -> jStringOrNone(ignoreTemplate))
+        ("description" -> jStringOrNone(_desc)) ~
+        ("homepage" -> jStringOrNone(_homepage)) ~
+        ("has_issues" -> _hasIssues) ~
+        ("has_wiki" -> _hasWiki) ~
+        ("has_downloads" -> _hasDownloads) ~
+        ("team_id" -> jIntOrNone(_teamId)) ~
+        ("auto_init" -> _autoinit) ~
+        ("gitignore_template" -> jStringOrNone(_ignoreTemplate))
       compact(render(js))
     }
   }
@@ -69,41 +71,42 @@ trait Repositories { self: Requests =>
   }
   
   protected [this]
-  case class RepoFilter(base: RequestBuilder,
-                         typ: String = "all",
-                         sort: String = "full_name",
-                         dir: Option[String] = None)
+  case class RepoFilter(
+    base: RequestBuilder,
+    _typ: String = "all",
+    _sort: String = "full_name",
+    _dir: Option[String] = None)
      extends Client.Completion {
 
     // type
 
-    def all = copy(typ = "all")
-    def owner = copy(typ = "owner")
-    def pub = copy(typ = "public")
-    def priv = copy(typ = "private")
-    def member = copy(typ = "member")
+    def all = copy(_typ = "all")
+    def owner = copy(_typ = "owner")
+    def pub = copy(_typ = "public")
+    def priv = copy(_typ = "private")
+    def member = copy(_typ = "member")
  
     // sort
 
     def sortBy = new {
-      def created = copy(sort = "created")
-      def updated = copy(sort = "updated")
-      def pushed = copy(sort = "pushed")
-      def fullName = copy(sort = "full_name")
+      def created = copy(_sort = "created")
+      def updated = copy(_sort = "updated")
+      def pushed = copy(_sort = "pushed")
+      def fullName = copy(_sort = "full_name")
     }
 
     // dir
 
-    def asc = copy(dir = Some("asc"))
-    def desc = copy(dir = Some("desc"))
+    def asc = copy(_dir = Some("asc"))
+    def desc = copy(_dir = Some("desc"))
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(base <<? Map("type" -> typ,
-                           "sort" -> sort) ++
-                         dir.map("direction" -> _))(handler)
+      request(base <<? Map("type" -> _typ,
+                           "sort" -> _sort) ++
+                           _dir.map("direction" -> _))(handler)
   }
 
-  def repositories = new {
+  object AnyRepoRequests {
     /** http://developer.github.com/v3/repos/#list-all-repositories */
     case class RepoLimiter(base: RequestBuilder, sinceval: Option[Int] = None)
        extends Client.Completion {
@@ -124,11 +127,17 @@ trait Repositories { self: Requests =>
       RepoBuilder(name)
   }
 
-  def organization(org: String) = new {
-    /** http://developer.github.com/v3/repos/#list-organization-repositories */
+  def repositories =
+    AnyRepoRequests
+
+  case class OrganizationRepoRequests(org: String) {
+     /** http://developer.github.com/v3/repos/#list-organization-repositories */
     def repos =
       complete(apiHost / "orgs" / org / "repos")
   }
+
+  def organization(org: String) =
+    OrganizationRepoRequests(org)
 
   def repo(login: String, name: String) =
     user(login).repo(name)
@@ -137,6 +146,7 @@ trait Repositories { self: Requests =>
     new UserRequests(user)
 }
 
+/** Repository requests for a specific repo */
 class RepoRequests(val user: String, val repo: String, requests: Requests)
     extends Client.Completion
        with Git
@@ -189,50 +199,51 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
     def debranch(br: String) =
       complete(apiHost.DELETE / "repos" / user / repo / "branches" / br)
 
+    /** Gihub hook interfaces */
     protected [this]
     object Hooks extends Client.Completion with Jsonizing {
       private [this] def base = apiHost / "repos" / user / repo / "hooks"
 
       protected [this]
       case class Hook(name: String,
-                      id: Option[String] = None,
-                      configval: Map[String, Any] = Map.empty[String, Any],
-                      eventsval: List[String] = List("push"),
-                      activeval: Option[Boolean] = None,
-                      addeventsval: List[String] = Nil,
-                      rmeventsval: List[String] = Nil)
+                      _id: Option[String] = None,
+                      _config: Map[String, Any] = Map.empty[String, Any],
+                      _events: List[String] = List("push"),
+                      _active: Option[Boolean] = None,
+                      _addevents: List[String] = Nil,
+                      _rmevents: List[String] = Nil)
          extends Client.Completion {
 
          def config(props: (String, Any)*) =
-           copy(configval = props.toMap)
+           copy(_config = props.toMap)
 
          def events(es: String*) =
-           copy(eventsval = es.toList)
+           copy(_events = es.toList)
 
          def addEvents(es: String*) =
-           id match {
-             case Some(_) => copy(addeventsval = es.toList)
-             case _ => copy(eventsval = eventsval ::: es.toList)
+           _id match {
+             case Some(_) => copy(_addevents = es.toList)
+             case _ => copy(_events = _events ::: es.toList)
            }
 
          def removeEvents(es: String*) =
-           id match {
-             case Some(_) => copy(rmeventsval = es.toList)
+           _id match {
+             case Some(_) => copy(_rmevents = es.toList)
              case _ => this
            }
 
          def active(is: Boolean) =
-           copy(activeval = Some(is))
+           copy(_active = Some(is))
 
          override def apply[T](hand: Client.Handler[T]) =
-           request(id.map(base.PATCH / _).getOrElse(base.POST) << pmap)(hand)
+           request(_id.map(base.PATCH / _).getOrElse(base.POST) << pmap)(hand)
 
          private def pmap = {
-           val json = ("name" -> name) ~ ("events" -> eventsval) ~ ("active" -> jBoolOrNone(activeval))
-           val confd = if (configval.isEmpty) json else json ~ ("config" -> configval.map {
+           val json = ("name" -> name) ~ ("events" -> _events) ~ ("active" -> jBoolOrNone(_active))
+           val confd = if (_config.isEmpty) json else json ~ ("config" -> _config.map {
              case (k, v) => (k -> v.toString)
            })
-           compact(render(if (id.isDefined) confd ~ ("add_events" -> addeventsval) ~ ("remove_events" -> rmeventsval)
+           compact(render(if (_id.isDefined) confd ~ ("add_events" -> _addevents) ~ ("remove_events" -> _rmevents)
            else confd))
          }
       }
@@ -269,10 +280,10 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
     case class PubHub(mode: String,
                       event: String,
                       callback: String,
-                      secretval: Option[String] = None)
+                      _secret: Option[String] = None)
         extends Client.Completion {
       private [this] def base = apiHost / "hub"
-      def secret(sec: String) = copy(secretval = Some(sec))
+      def secret(sec: String) = copy(_secret = Some(sec))
 
       // fixme: will get Needs hub.callback if params
       // provided in request body. escaping issue?
@@ -285,7 +296,7 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
         "hub.topic" -> "https://github.com/%s/%s/events/%s"
                         .format(user, repo, event)
         ) ++
-        secretval.map("hub.secret" -> _)
+        _secret.map("hub.secret" -> _)
     }
 
     def subscribe(event: String, callback: String) =

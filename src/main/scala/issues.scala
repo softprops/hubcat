@@ -32,19 +32,21 @@ trait Issues { self: Requests =>
 // cli.repo(user, repo).reissue(id).title(...)...
 trait RepoIssues { self: RepoRequests  =>
 
+  /** Gihub Issue query filter */
   protected [this]
-  case class RepoIssuesBuilder(user: String,
-                               repo: String,
-                               milestoneval: String = "none",
-                               state: String = "open",
-                               assigneeval: Option[String] = None,
-                               creatorval: Option[String] = None,
-                               mentionedval: Option[String] = None,
-                               labelsval: Option[Traversable[String]] = None,
-                               sort: String = "created",
-                               order: String = "desc",
-                               sinceval: Option[String] = None,
-                               accept: String = Types.GithubJson)
+  case class RepoIssuesFilter(
+    user: String,
+    repo: String,
+    _milestone: String = "none",
+    _state: String = "open",
+    _assignee: Option[String] = None,
+    _creator: Option[String] = None,
+    _mentioned: Option[String] = None,
+    _labels: Option[Traversable[String]] = None,
+    _sort: String = "created",
+    _order: String = "desc",
+    _since: Option[String] = None,
+    _accept: String = Types.GithubJson)
     extends Client.Completion {
 
     /** http://developer.github.com/v3/issues/#create-an-issue */
@@ -60,105 +62,107 @@ trait RepoIssues { self: RepoRequests  =>
       complete(apiHost / "repos" / user / repo / "assignees" / assignee)
 
     def accepting = new {
-      def raw = copy(accept = Types.RawJson)
-      def text = copy(accept = Types.TextJson)
-      def html = copy(accept = Types.HtmlJson)
-      def fullJson = copy(accept = Types.FullJson)
+      def raw = copy(_accept = Types.RawJson)
+      def text = copy(_accept = Types.TextJson)
+      def html = copy(_accept = Types.HtmlJson)
+      def fullJson = copy(_accept = Types.FullJson)
     }
 
     // states (defaults to open)
 
-    def open = copy(state = "open")
-    def closed = copy(state = "closed")
+    def open = copy(_state = "open")
+    def closed = copy(_state = "closed")
 
     // milestones
 
-    def milestone(n: Int) = copy(milestoneval = n.toString)
-    def noMilestone = copy(milestoneval = "none")
-    def anyMilestone = copy(milestoneval = "*")
+    def milestone(n: Int) = copy(_milestone = n.toString)
+    def noMilestone = copy(_milestone = "none")
+    def anyMilestone = copy(_milestone = "*")
 
     // assignees
 
-    def assignee(login: String) = copy(assigneeval = Some(login))
-    def unassigned = copy(assigneeval = Some("none"))
-    def anyAssignee = copy(assigneeval = Some("*"))
+    def assignee(login: String) = copy(_assignee = Some(login))
+    def unassigned = copy(_assignee = Some("none"))
+    def anyAssignee = copy(_assignee = Some("*"))
 
-    def creator(login: String) = copy(creatorval = Some(login))
+    def creator(login: String) = copy(_creator = Some(login))
     
-    def mentioned(login: String) = copy(mentionedval = Some(login))
+    def mentioned(login: String) = copy(_mentioned = Some(login))
     
     def labels(l: Traversable[String]) =
-      copy(labelsval = Some(l))
+      copy(_labels = Some(l))
 
     // sorting
 
     def sortBy = new {
-      def created = copy(sort = "created")
-      def updated = copy(sort = "updated")
-      def comments = copy(sort = "comments")
+      def created = copy(_sort = "created")
+      def updated = copy(_sort = "updated")
+      def comments = copy(_sort = "comments")
     }
 
     // ordering
 
-    def asc = copy(order = "asc")
-    def desc = copy(order = "desc")
+    def asc = copy(_order = "asc")
+    def desc = copy(_order = "desc")
 
-    def since(d: Date) = copy(sinceval = Some(ISO8601(d)))
+    def since(d: Date) = copy(_since = Some(ISO8601(d)))
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(apiHost / "repos" / user / repo / "issues" <<? pmap <:< Map("Accept" -> accept))(handler)
+      request(apiHost / "repos" / user / repo / "issues" <<? pmap <:< Map("Accept" -> _accept))(handler)
 
     private def pmap =
-      Map("milestone" -> milestoneval.toString,
-          "state"     -> state,
-          "sort"      -> sort,
-          "order"     -> order) ++
-      assigneeval.map("assignee" -> _) ++
-      creatorval.map("creator" -> _) ++
-      mentionedval.map("mentioned" -> _) ++
-      labelsval.map("labels" -> _.mkString(","))
+      Map("milestone" -> _milestone,
+          "state"     -> _state,
+          "sort"      -> _sort,
+          "order"     -> _order) ++
+      _assignee.map("assignee" -> _) ++
+      _creator.map("creator" -> _) ++
+      _mentioned.map("mentioned" -> _) ++
+      _labels.map("labels" -> _.mkString(","))
   }
 
+  /** Builder for creating or updaing Github issues */
   protected [this]
-  case class RepoIssueBuilder(user: String, repo: String,
-                              id: Option[Int] = None,
-                              titleval: Option[String] = None,
-                              bodyval: Option[String] = None,
-                              assigneeval: Option[String] = None,
-                              milestoneval: Option[Int] = None,
-                              labelsval: Option[Seq[String]] = None,
-                              state: Option[String] = None)
+  case class RepoIssueBuilder(
+    user: String,
+    repo: String,
+    _id: Option[Int] = None,
+    _title: Option[String] = None,
+    _body: Option[String] = None,
+    _assignee: Option[String] = None,
+    _milestone: Option[Int] = None,
+    _labels: Option[Seq[String]] = None,
+    _state: Option[String] = None)
      extends Client.Completion
         with Jsonizing {
 
-    def title(t: String) = copy(titleval = Some(t))
-    def body(b: String) = copy(bodyval = Some(b))
-    def assignee(a: String) = copy(assigneeval = Some(a))
-    def milestone(m: Int) = copy(milestoneval = Some(m))
-    def labels(ls: Seq[String]) = copy(labelsval = Some(ls))
-    def close = copy(state = Some("close"))
-    def open = copy(state = Some("open"))
+    def title(t: String) = copy(_title = Some(t))
+    def body(b: String) = copy(_body = Some(b))
+    def assignee(a: String) = copy(_assignee = Some(a))
+    def milestone(m: Int) = copy(_milestone = Some(m))
+    def labels(ls: Seq[String]) = copy(_labels = Some(ls))
+    def close = copy(_state = Some("close"))
+    def open = copy(_state = Some("open"))
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(id.map(apiHost.PATCH / "repos" / user / repo / "issues" / _.toString).getOrElse(
+      request(_id.map(apiHost.PATCH / "repos" / user / repo / "issues" / _.toString).getOrElse(
         apiHost.POST / "repos" / user / repo / "issues"
       ) << pjson)(handler)
 
     private def pjson = {
       val js =
-        ("title" -> jStringOrNone(titleval)) ~
-        ("body" -> jStringOrNone(bodyval)) ~
-        ("assignee" -> jStringOrNone(assigneeval)) ~
-        ("milestone" -> jIntOrNone(milestoneval)) ~
-        ("labels" -> labelsval.map(_.toList)) ~
-        ("state" -> jStringOrNone(state))
+        ("title" -> jStringOrNone(_title)) ~
+        ("body" -> jStringOrNone(_body)) ~
+        ("assignee" -> jStringOrNone(_assignee)) ~
+        ("milestone" -> jIntOrNone(_milestone)) ~
+        ("labels" -> _labels.map(_.toList)) ~
+        ("state" -> jStringOrNone(_state))
       
       compact(render(js))
     }
   }
 
-  def issues = RepoIssuesBuilder(user, repo)
-
+  /** Milestone methods */
   protected [this] 
   object Milestones {
     /** http://developer.github.com/v3/issues/milestones/#list-milestones-for-a-repository */
@@ -177,13 +181,12 @@ trait RepoIssues { self: RepoRequests  =>
     def delete(num: String) =
       complete(apiHost.DELETE / "repo" / user / repo / "milestones" / num)
 
-    /** http://developer.github.com/v3/issues/milestones/#create-a-milestone */
+    /** http://developer.github.com/v3/issues/milestones/#create-a-milestone TODO impl this!*/
     def create(num: String) =
       complete(apiHost.POST / "repo" / user / repo / "milestones")
   }
 
-  def milestones = Milestones
-
+  /** Requests for accessing and creating repo labels */
   protected [this]
   object Labels extends Client.Completion {
     /** http://developer.github.com/v3/issues/labels/#list-all-labels-for-this-repository */
@@ -214,18 +217,17 @@ trait RepoIssues { self: RepoRequests  =>
    def delete(name: String) =
      complete(apiHost.DELETE / "repos" / user / repo / "labels" / name)
   }
-  
-  def labels = Labels
 
+  /** Requests for a specific Github issue */
   protected [this]
-  case class Issue(id: Int, accept: String = Types.GithubJson)
+  case class Issue(id: Int, _accept: String = Types.GithubJson)
      extends Client.Completion {
 
     def accepting = new {
-      def raw = copy(accept = Types.RawJson)
-      def text = copy(accept = Types.TextJson)
-      def html = copy(accept = Types.HtmlJson)
-      def fullJson = copy(accept = Types.FullJson)
+      def raw = copy(_accept = Types.RawJson)
+      def text = copy(_accept = Types.TextJson)
+      def html = copy(_accept = Types.HtmlJson)
+      def fullJson = copy(_accept = Types.FullJson)
     }
 
     def labels =
@@ -256,12 +258,14 @@ trait RepoIssues { self: RepoRequests  =>
 
      /** http://developer.github.com/v3/issues/#get-a-single-issue */
     override def apply[T](hand: Client.Handler[T]) =
-      request(apiHost / "repos" / user / repo / "issues" / id.toString <:< Map("Accept" -> accept))(hand)
+      request(apiHost / "repos" / user / repo / "issues" / id.toString <:< Map("Accept" -> _accept))(hand)
 
     def close =
-      RepoIssueBuilder(user, repo, id = Some(id)).close
+      RepoIssueBuilder(user, repo, _id = Some(id)).close
 
-    protected [this] object Comments extends Client.Completion {
+    /** Github issue comments */
+    protected [this]
+    object Comments extends Client.Completion {
       def get(cid: Int) =
         complete(apiHost / "repos" / user / repo / "issues" / id.toString / "comments" / cid.toString)
 
@@ -281,10 +285,19 @@ trait RepoIssues { self: RepoRequests  =>
     def comments = Comments
   }
 
+  def issues =
+    RepoIssuesFilter(user, repo)
+
+  def milestones =
+    Milestones
+  
+  def labels =
+    Labels
+
   def issue(id: Int) =
     Issue(id)
 
   /** http://developer.github.com/v3/issues/#edit-an-issue */
   def reissue(id: Int) =
-    RepoIssueBuilder(user, repo, id = Some(id))  
+    RepoIssueBuilder(user, repo, _id = Some(id))  
 }
