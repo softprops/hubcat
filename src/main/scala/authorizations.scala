@@ -1,72 +1,75 @@
 package hubcat
 
-import dispatch._
 import com.ning.http.client.RequestBuilder
-
+import dispatch._
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
 
 trait Authorizations { self: Requests =>
+  /** Builder for new authorizations */
   protected [this]
-  case class AuthorizationBuilder(scopesval: Option[Seq[String]] = None,
-                                  noteval: Option[String] = None,
-                                  urlval: Option[String] = None, 
-                                  clientval: Option[(String, String)] = None)
+  case class AuthorizationBuilder(
+    _scopes: Option[Seq[String]] = None,
+    _note: Option[String] = None,
+    _url: Option[String] = None, 
+    _client: Option[(String, String)] = None)
      extends Client.Completion
         with Jsonizing {
 
-    def scopes(s: String*) = copy(scopesval = Some(s))
-    def note(n: String) = copy(noteval = Some(n))
-    def url(u: String) = copy(urlval = Some(u))
-    def client(id: String, secret: String) = copy(clientval = Some((id, secret)))
+    def scopes(s: String*) = copy(_scopes = Some(s))
+    def note(n: String) = copy(_note = Some(n))
+    def url(u: String) = copy(_url = Some(u))
+    def client(id: String, secret: String) = copy(_client = Some((id, secret)))
 
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost.POST / "authorizations" << pjson)(handler)
 
     private def pjson = {
       val base = 
-        ("scopes" -> scopesval.map(_.toList).getOrElse(Nil)) ~
-        ("note" -> jStringOrNone(noteval)) ~
-        ("note_url" -> jStringOrNone(urlval))
-      val js = clientval.map {
+        ("scopes" -> _scopes.map(_.toList).getOrElse(Nil)) ~
+        ("note" -> jStringOrNone(_note)) ~
+        ("note_url" -> jStringOrNone(_url))
+      val js = _client.map {
         case (id, sec) => base ~ ("client_id" -> id) ~ ("client_secret" -> sec)
       }.getOrElse(base)
       compact(render(js))
     }
   }
 
+  /** Builder for updating existing authorizations */
   protected [this]
-  case class ReauthorizeBuilder(id: String,
-                                scopesval: Option[Seq[String]] = None,
-                                scopeop: Option[Boolean] = None,
-                                urlval: Option[String] = None,
-                                noteval: Option[String] = None)
+  case class ReauthorizeBuilder(
+    id: String,
+    _scopes: Option[Seq[String]] = None,
+    _scopeop: Option[Boolean] = None,
+    _url: Option[String] = None,
+    _note: Option[String] = None)
      extends Client.Completion
         with Jsonizing {
 
-    def note(n: String) = copy(noteval = Some(n))
-    def url(u: String) = copy(urlval = Some(u))
+    def note(n: String) = copy(_note = Some(n))
+    def url(u: String) = copy(_url = Some(u))
     def addScopes(sx: String*) =
-      copy(scopesval = Some(sx), scopeop = Some(true))
+      copy(_scopes = Some(sx), _scopeop = Some(true))
     def removeScopes(sx: String*) =
-      copy(scopesval = Some(sx), scopeop = Some(false))
+      copy(_scopes = Some(sx), _scopeop = Some(false))
     def scopes(sx: String*) =
-      copy(scopesval = Some(sx), scopeop = None)
+      copy(_scopes = Some(sx), _scopeop = None)
 
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost.POST / "authorizations" / id << pjson)(handler)
 
     private def pjson = {
       val note =
-        ("note" -> jStringOrNone(noteval)) ~
-        ("note_url" -> jStringOrNone(urlval))
-      val js = scopeop.map {
+        ("note" -> jStringOrNone(_note)) ~
+        ("note_url" -> jStringOrNone(_url))
+      val js = _scopeop.map {
         op =>
-          val scps = if (op) ("add_scopes" -> scopesval.map(_.toList))
-          else ("remove_scopes" -> scopesval.map(_.toList))
+          val scps = if (op) ("add_scopes" -> _scopes.map(_.toList))
+          else ("remove_scopes" -> _scopes.map(_.toList))
           note ~ scps
-      }.getOrElse(note ~ ("scopes" -> scopesval.map(_.toList)))
+      }.getOrElse(note ~ ("scopes" -> _scopes.map(_.toList)))
 
       compact(render(js))
     } 

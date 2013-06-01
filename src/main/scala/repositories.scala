@@ -1,12 +1,10 @@
 package hubcat
 
-import dispatch._
 import com.ning.http.client.RequestBuilder
-
+import dispatch._
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
-
 import scala.concurrent.Future
 
 // cli.repositories.all

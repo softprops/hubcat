@@ -1,35 +1,36 @@
 package hubcat
 
-import dispatch._
 import com.ning.http.client.RequestBuilder
+import dispatch._
 import java.util.Date
+import org.json4s.JsonDSL._
+import org.json4s.native.Printer.compact
+import org.json4s.native.JsonMethods.render
 
 trait Gists { self: Requests =>
 
   protected [this]
-  case class GistBuilder(filevals: Map[String, String] = Map.empty[String, String],
-                         descval: Option[String] = None,
-                         vis: Boolean = true)
+  case class GistBuilder(
+    _files: Map[String, String] = Map.empty[String, String],
+    _desc: Option[String] = None,
+    _vis: Boolean = true)
      extends Client.Completion
         with Jsonizing {
 
-    def desc(d: String) = copy(descval = Some(d))
-    def pub = copy(vis = true)
-    def secret = copy(vis = false)
-    def file(content: String, name: String = "f%s" format filevals.size) =
-      copy(filevals = filevals + ((name, content)))
+    def desc(d: String) = copy(_desc = Some(d))
+    def pub = copy(_vis = true)
+    def secret = copy(_vis = false)
+    def file(content: String, name: String = "f%s" format _files.size) =
+      copy(_files = _files + ((name, content)))
 
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost.POST / "gists" << pjson)(handler)
 
     private def pjson = {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
       val js =
-        ("public" -> vis) ~ 
-        ("description" -> jStringOrNone(descval)) ~
-        ("files" -> filevals.map {
+        ("public" -> _vis) ~ 
+        ("description" -> jStringOrNone(_desc)) ~
+        ("files" -> _files.map {
           case (name, content) => (name -> ("content" -> content))
         })
       compact(render(js))
@@ -37,26 +38,24 @@ trait Gists { self: Requests =>
   }
 
   protected [this]
-  case class RegistBuilder(id: String,
-                           filevals: Map[String, String] = Map.empty[String, String],
-                           descval: Option[String] = None)
+  case class RegistBuilder(
+    id: String,
+    _files: Map[String, String] = Map.empty[String, String],
+    _desc: Option[String] = None)
      extends Client.Completion
         with Jsonizing {
 
-    def desc(d: String) = copy(descval = Some(d))
-    def file(content: String, name: String = "f%s" format filevals.size) =
-      copy(filevals = filevals + ((name, content)))
+    def desc(d: String) = copy(_desc = Some(d))
+    def file(content: String, name: String = "f%s" format _files.size) =
+      copy(_files = _files + ((name, content)))
 
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost.PATCH / "gists" / id << pjson)(handler)
 
     private def pjson = {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
       val js =
-        ("description" -> jStringOrNone(descval)) ~
-        ("files" -> filevals.map {
+        ("description" -> jStringOrNone(_desc)) ~
+        ("files" -> _files.map {
           case (name, content) => (name -> ("content" -> content))
         })
       compact(render(js))
@@ -106,9 +105,6 @@ trait Gists { self: Requests =>
 
            /** http://developer.github.com/v3/gists/comments/#edit-a-comment */
            def edit(body: String) = {
-             import org.json4s.JsonDSL._
-             import org.json4s.native.Printer.compact
-             import org.json4s.native.JsonMethods.render
              complete(apiHost.PATCH / "gists" / id / "comments" / cid.toString << compact(render(("body" -> body))))
            }
 
@@ -126,9 +122,6 @@ trait Gists { self: Requests =>
 
        /** http://developer.github.com/v3/gists/comments/#create-a-comment */
        def comment(body: String) = {
-         import org.json4s.JsonDSL._
-         import org.json4s.native.Printer.compact
-         import org.json4s.native.JsonMethods.render
          complete(apiHost.POST / "gists" / id / "comments" << compact(render(("body" -> body))))
        }
          

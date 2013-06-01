@@ -1,7 +1,7 @@
 package hubcat
 
-import dispatch._, dispatch.Defaults._
 import com.ning.http.client.{ AsyncHandler, RequestBuilder }
+import dispatch._, dispatch.Defaults._
 import scala.concurrent.Future
 
 object Client {
