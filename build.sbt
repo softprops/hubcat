@@ -6,7 +6,7 @@ version := "0.1.1"
 
 description := "a vvip client of the github enterprises"
 
-libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.10.0")
+libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.10.1")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
