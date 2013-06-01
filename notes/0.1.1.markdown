@@ -1,0 +1,24 @@
+### changes
+
+- Client.Handler is now more a more flexible type, `com.ning.http.client.AsyncHandler[T]`.
+Existing code should function as-is. Code using the client's previous handler type `Response => T` is implicitly lifted into this type.
+
+- Removed lift-json as dependency and added json4s-native. ( I recommend you do too! ) For most client code, this only means you need to substitute lift-json imports for json4s imports
+
+- Added support for the [Hooks api](http://developer.github.com/v3/repos/hooks/)
+
+- Added support for [pubhubing](http://developer.github.com/v3/repos/hooks/#pubsubhubbub)
+
+    import hubcat._
+    // let me know when someone pushes to my repo!
+    val github = Client(accessToken)
+    github.repo(user, repo)
+           .subscribe(RepoEvents.Push,
+             "http://requestb.in/1lvilqc1")(as.json4s.Json)()
+
+
+### try it out
+
+    libraryDependencies += "me.lessis" %% "0.1.1" % "hubcat"
+
+For more info see the [readme](https://github.com/softprops/hubcat#readme)
