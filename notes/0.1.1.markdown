@@ -16,6 +16,16 @@ Existing code should function as-is. Code using the client's previous handler ty
            .subscribe(RepoEvents.Push,
              "http://requestb.in/1lvilqc1")(as.json4s.Json)()
 
+- Added support for [pull requesting](http://developer.github.com/v3/pulls/)
+
+   import hubcat._
+   val github = Client(accessToken)
+   github.repo(user, repo)
+         .pulls.create("I want this", "myuser:mybranch").body(
+         """Hey I heard you liked pull requests, so I'm submitting a pull request
+            |that adds support for submitting pull requests. I hope you like it.
+            """.stripMargin
+         )(as.json4s.Json)()
 
 ### try it out
 
