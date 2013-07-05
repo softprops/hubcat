@@ -28,8 +28,8 @@ trait RepoPulls
         request(RepoPulls.this.base)(handler)
 
       /** http://developer.github.com/v3/pulls/#create-a-pull-request */
-      def create(title: String) =
-        PullBuilder(title)
+      def create(title: String, head: String) =
+        PullBuilder(title, head: String)
     }
 
   case class Pull(id: Int) extends Client.Completion {
@@ -61,27 +61,26 @@ trait RepoPulls
       def files = complete(base / id / "files")
 
       /** http://developer.github.com/v3/pulls/#get-if-a-pull-request-has-been-merged */
-      def merged = complete(base / id / "merged")
+      def merged = complete(base / id / "merge")
 
       /** http://developer.github.com/v3/pulls/#merge-a-pull-request-merge-buttontrade */
-      def merge = complete(base.PUT / id / "merged")
+      def merge(msg: Option[String] = None) = complete(base.PUT / id / "merge" << compact(render(("commit_message" -> msg))))
   }
 
   case class PullBuilder(
     title: String,
+    head: String,
+    _base: String = "master",
     _body: Option[String] = None,
-    _base: Option[String] = None,
-    _head: Option[String] = None,
     _issue: Option[Int] = None)
     extends Client.Completion {
     def body(b: String) = copy(_body = Some(b))
-    def base(b: String) = copy(_base = Some(b))
-    def head(h: String) = copy(_head = Some(h))
+    def base(b: String) = copy(_base = b)
     override def apply[T](handler: Client.Handler[T]) =        
       request(RepoPulls.this.base.POST << pmap)(handler)
     def pmap =
       compact(render(("title" -> title) ~ ("body" -> _body) ~
-          ("base" -> _base) ~ ("head" -> _head) ~ ("issue" -> _issue)))
+          ("base" -> _base) ~ ("head" -> head) ~ ("issue" -> _issue)))
     }
 
     /** http://developer.github.com/v3/pulls/#list-pull-requests */
