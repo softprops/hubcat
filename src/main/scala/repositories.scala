@@ -148,10 +148,13 @@ trait Repositories { self: Requests =>
 class RepoRequests(val user: String, val repo: String, requests: Requests)
     extends Client.Completion
        with Git
-       with RepoIssues {
+       with RepoIssues
+       with RepoPulls {
 
     // for mixins
-    def request[T](req: RequestBuilder)(handler: Client.Handler[T]): Future[T] =
+    def request[T]
+     (req: RequestBuilder)
+     (handler: Client.Handler[T]): Future[T] =
       requests.request(req)(handler)
     def complete(req: RequestBuilder): Client.Completion =
       requests.complete(req)
@@ -197,9 +200,11 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
     def debranch(br: String) =
       complete(apiHost.DELETE / "repos" / user / repo / "branches" / br)
 
+
+
     /** Gihub hook interfaces */
     protected [this]
-    object Hooks extends Client.Completion with Jsonizing {
+    case class Hooks(user: String, repo: String) extends Client.Completion with Jsonizing {
       private [this] def base = apiHost / "repos" / user / repo / "hooks"
 
       protected [this]
@@ -271,7 +276,7 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
         complete(base.DELETE / id)
     }
 
-    def hooks = Hooks
+    def hooks = Hooks(user, repo)
 
     /** http://developer.github.com/v3/repos/hooks/#pubsubhubbub */
     protected [this]
