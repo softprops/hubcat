@@ -31,6 +31,7 @@ trait RepoPulls
                 _base.map("base" -> _))(handler)
     }
 
+    /** http://developer.github.com/v3/pulls/#list-pull-requests */
     def filter = Filter()
 
     /** http://developer.github.com/v3/pulls/#create-a-pull-request */
@@ -38,7 +39,10 @@ trait RepoPulls
       PullBuilder(title, head: String)
   }
 
-  case class Pull(id: Int, _accept: String = Types.GithubJson) extends Client.Completion {
+  /** Operations defined for a specific pull request */
+  case class Pull(id: Int, _accept: String = Types.GithubJson)
+    extends Client.Completion {
+    /** Update operation fields */
     case class Update(
       _title: Option[String] = None,
       _body: Option[String] = None,
@@ -61,19 +65,20 @@ trait RepoPulls
         def fullJson = copy(_accept = Types.FullJson)
       }
 
-      private def accept = Map("Accept" -> _accept)
+      private def acceptHeader = Map("Accept" -> _accept)
 
+      /** http://developer.github.com/v3/pulls/#get-a-single-pull-request */
       override def apply[T](handler: Client.Handler[T]) =        
-        request(base / id <:< accept)(handler)
+        request(base / id <:< acceptHeader)(handler)
 
       /** http://developer.github.com/v3/pulls/#update-a-pull-request */
       def update = Update()
 
       /** http://developer.github.com/v3/pulls/#list-commits-on-a-pull-request */
-      def commits = complete(base / id / "commits" <:< accept)
+      def commits = complete(base / id / "commits" <:< acceptHeader)
 
       /** http://developer.github.com/v3/pulls/#list-pull-requests-files */
-      def files = complete(base / id / "files" <:< accept)
+      def files = complete(base / id / "files" <:< acceptHeader)
 
       /** http://developer.github.com/v3/pulls/#get-if-a-pull-request-has-been-merged */
       def merged = complete(base / id / "merge")
@@ -83,6 +88,7 @@ trait RepoPulls
         complete(base.PUT / id / "merge" << compact(render(("commit_message" -> msg))))
   }
 
+  /** Builder for creating a new pull request */
   case class PullBuilder(
     title: String,
     head: String,
@@ -99,9 +105,7 @@ trait RepoPulls
           ("base" -> _base) ~ ("head" -> head) ~ ("issue" -> _issue)))
   }
 
-  /** http://developer.github.com/v3/pulls/#list-pull-requests */
   def pulls = new Pulls
 
-  /** http://developer.github.com/v3/pulls/#get-a-single-pull-request */
   def pull(id: Int): Pull = Pull(id)
 }

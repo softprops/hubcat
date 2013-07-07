@@ -6,7 +6,7 @@ import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
 
 trait RepoHooks { self: RepoRequests =>
-  class Hooks extends Client.Completion with Jsonizing {
+  class Hooks extends Client.Completion {
     private [this] def base = apiHost / "repos" / user / repo / "hooks"
 
     protected [this]
