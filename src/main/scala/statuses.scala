@@ -23,8 +23,7 @@ object Status {
   }
 }
 
-trait RepoStatuses
-  extends Jsonizing { self: RepoRequests =>
+trait RepoStatuses { self: RepoRequests =>
   case class Statuses(ref: String) extends Client.Completion {
     private [this] def base = apiHost / user / repo / "statuses" / ref
 
