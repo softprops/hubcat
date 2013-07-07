@@ -6,33 +6,39 @@ import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
 
 trait RepoPulls
-  extends Client.Completion with Jsonizing { self: RepoRequests =>
+  extends Client.Completion { self: RepoRequests =>
   private def base = apiHost / "repos" / user / repo / "pulls"
-  class Pulls
-    extends Client.Completion {
+  class Pulls {
     case class Filter(
       _state: Option[String] = None,
       _head: Option[String] = None,
-      _base: Option[String] = None)
+      _base: Option[String] = None,
+      _accept: String = Types.GithubJson)
       extends Client.Completion {
       def state(s: String) = copy(_state = Some(s))
       def head(h: String) = copy(_head = Some(h))
       def base(b: String) = copy(_head = Some(b))
-      override def apply[T](handler: Client.Handler[T]) =        
-        request(RepoPulls.this.base <<? Map.empty[String, String] ++
+      def accepting = new {
+        def raw = copy(_accept = Types.RawJson)
+        def text = copy(_accept = Types.TextJson)
+        def html = copy(_accept = Types.HtmlJson)
+        def fullJson = copy(_accept = Types.FullJson)
+      }
+      override def apply[T](handler: Client.Handler[T]) =
+        request(RepoPulls.this.base <:< Map("Accept" -> _accept) <<? Map.empty[String, String] ++
                 _state.map("state" -> _) ++
                 _head.map("head" -> _)   ++
                 _base.map("base" -> _))(handler)
-      }
-      override def apply[T](handler: Client.Handler[T]) =
-        request(RepoPulls.this.base)(handler)
-
-      /** http://developer.github.com/v3/pulls/#create-a-pull-request */
-      def create(title: String, head: String) =
-        PullBuilder(title, head: String)
     }
 
-  case class Pull(id: Int) extends Client.Completion {
+    def filter = Filter()
+
+    /** http://developer.github.com/v3/pulls/#create-a-pull-request */
+    def create(title: String, head: String) =
+      PullBuilder(title, head: String)
+  }
+
+  case class Pull(id: Int, _accept: String = Types.GithubJson) extends Client.Completion {
     case class Update(
       _title: Option[String] = None,
       _body: Option[String] = None,
@@ -48,23 +54,33 @@ trait RepoPulls
                        ("state" -> _state)))
       }
 
+      def accepting = new {
+        def raw = copy(_accept = Types.RawJson)
+        def text = copy(_accept = Types.TextJson)
+        def html = copy(_accept = Types.HtmlJson)
+        def fullJson = copy(_accept = Types.FullJson)
+      }
+
+      private def accept = Map("Accept" -> _accept)
+
       override def apply[T](handler: Client.Handler[T]) =        
-        request(base / id)(handler)
+        request(base / id <:< accept)(handler)
 
       /** http://developer.github.com/v3/pulls/#update-a-pull-request */
       def update = Update()
 
       /** http://developer.github.com/v3/pulls/#list-commits-on-a-pull-request */
-      def commits = complete(base / id / "commits")
+      def commits = complete(base / id / "commits" <:< accept)
 
       /** http://developer.github.com/v3/pulls/#list-pull-requests-files */
-      def files = complete(base / id / "files")
+      def files = complete(base / id / "files" <:< accept)
 
       /** http://developer.github.com/v3/pulls/#get-if-a-pull-request-has-been-merged */
       def merged = complete(base / id / "merge")
 
       /** http://developer.github.com/v3/pulls/#merge-a-pull-request-merge-buttontrade */
-      def merge(msg: Option[String] = None) = complete(base.PUT / id / "merge" << compact(render(("commit_message" -> msg))))
+      def merge(msg: Option[String] = None) =
+        complete(base.PUT / id / "merge" << compact(render(("commit_message" -> msg))))
   }
 
   case class PullBuilder(
@@ -81,11 +97,11 @@ trait RepoPulls
     def pmap =
       compact(render(("title" -> title) ~ ("body" -> _body) ~
           ("base" -> _base) ~ ("head" -> head) ~ ("issue" -> _issue)))
-    }
+  }
 
-    /** http://developer.github.com/v3/pulls/#list-pull-requests */
-    def pulls = new Pulls
+  /** http://developer.github.com/v3/pulls/#list-pull-requests */
+  def pulls = new Pulls
 
-    /** http://developer.github.com/v3/pulls/#get-a-single-pull-request */
-    def pull(id: Int): Pull = Pull(id)
+  /** http://developer.github.com/v3/pulls/#get-a-single-pull-request */
+  def pull(id: Int): Pull = Pull(id)
 }
