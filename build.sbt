@@ -2,7 +2,7 @@ organization := "me.lessis"
 
 name := "hubcat"
 
-version := "0.1.1"
+version := "0.1.1-SNAPSHOT"
 
 description := "a vvip client of the github enterprises"
 
