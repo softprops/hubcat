@@ -1,6 +1,6 @@
 # hubcat
 
-hip cats, git hubs, good times.
+hip cats, git hubs, good times. asynchronous vvip client of the github enterprises
 
 ## install
 
@@ -73,9 +73,9 @@ for {
 }
 ```
 
-### Todo
+### Changelog
 
-(write some tests already)
+You can find a list of notable changes on [implicit.ly](http://notes.implicit.ly/search/hubcat)
 
 ### Resources
 
