@@ -5,9 +5,9 @@ Existing code should function as-is. Code using the client's previous handler ty
 
 - Removed lift-json as dependency and added json4s-native. ( I recommend you do too! ) For most client code, this only means you need to substitute lift-json imports for json4s imports
 
-- Added support for the [Hooks api](http://developer.github.com/v3/repos/hooks/)
+- Added support for the [Hooks api](http://developer.github.com/v3/repos/hooks/).
 
-- Added support for [pubhubing](http://developer.github.com/v3/repos/hooks/#pubsubhubbub)
+- Added support for [pubhubing](http://developer.github.com/v3/repos/hooks/#pubsubhubbub). Go out hubbing tonight.
 
     import hubcat._
     // let me know when someone pushes to my repo!
@@ -16,7 +16,7 @@ Existing code should function as-is. Code using the client's previous handler ty
            .subscribe(RepoEvents.Push,
              "http://requestb.in/1lvilqc1")(as.json4s.Json)()
 
-- Added support for [pull requesting](http://developer.github.com/v3/pulls/)
+- Added support for [pull requesting](http://developer.github.com/v3/pulls/). I'll push if you pull.
 
     import hubcat._
     val github = Client(accessToken)
@@ -27,7 +27,7 @@ Existing code should function as-is. Code using the client's previous handler ty
              """.stripMargin
           )(as.json4s.Json)()
 
-- Added suport for [statuses](http://developer.github.com/v3/repos/statuses/)
+- Added support for [statuses](http://developer.github.com/v3/repos/statuses/). You know, like [build statuses](http://about.travis-ci.org/docs/user/status-images/)
 
     import hubcat._
     // requires scope repo or repo:status
@@ -35,7 +35,7 @@ Existing code should function as-is. Code using the client's previous handler ty
     github.repo(user, repo)
           .statuses("master")(as.json4s.Json)()
 
-### try it out
+### give it a spin
 
     libraryDependencies += "me.lessis" %% "0.1.1" % "hubcat"
 
