@@ -1,5 +1,7 @@
 # hubcat
 
+[![Build Status](https://travis-ci.org/softprops/hubcat.png?branch=master)](https://travis-ci.org/softprops/hubcat)
+
 hip cats, git hubs, good times. asynchronous vvip client of the github enterprises
 
 ## install
