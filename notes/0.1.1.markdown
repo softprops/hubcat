@@ -7,7 +7,9 @@ Existing code should function as-is. Code using the client's previous handler ty
 
 - Added support for the [Hooks api](http://developer.github.com/v3/repos/hooks/).
 
-- Added support for [pubhubing](http://developer.github.com/v3/repos/hooks/#pubsubhubbub). Go out hubbing tonight.
+- Added support for [pubhubing](http://developer.github.com/v3/repos/hooks/#pubsubhubbub).
+
+Go out hubbing tonight.
 
     import hubcat._
     // let me know when someone pushes to my repo!
@@ -16,7 +18,9 @@ Existing code should function as-is. Code using the client's previous handler ty
            .subscribe(RepoEvents.Push,
              "http://requestb.in/1lvilqc1")(as.json4s.Json)()
 
-- Added support for [pull requesting](http://developer.github.com/v3/pulls/). I'll push if you pull.
+- Added support for [pull requesting](http://developer.github.com/v3/pulls/).
+
+I'll push if you pull.
 
     import hubcat._
     val github = Client(accessToken)
@@ -27,7 +31,9 @@ Existing code should function as-is. Code using the client's previous handler ty
              """.stripMargin
           )(as.json4s.Json)()
 
-- Added support for [statuses](http://developer.github.com/v3/repos/statuses/). You know, like [build statuses](http://about.travis-ci.org/docs/user/status-images/)
+- Added support for [statuses](http://developer.github.com/v3/repos/statuses/).
+
+You know, like [build statuses](http://about.travis-ci.org/docs/user/status-images/)
 
     import hubcat._
     // requires scope repo or repo:status
