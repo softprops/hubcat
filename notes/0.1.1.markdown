@@ -31,7 +31,7 @@ I'll push if you pull.
              """.stripMargin
           )(as.json4s.Json)()
 
-- Added support for [statuses](http://developer.github.com/v3/repos/statuses/).
+- Added support for [status updates](http://developer.github.com/v3/repos/statuses/).
 
 You know, like [build statuses](http://about.travis-ci.org/docs/user/status-images/)
 
