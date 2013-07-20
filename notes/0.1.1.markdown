@@ -43,6 +43,6 @@ You know, like [build statuses](http://about.travis-ci.org/docs/user/status-imag
 
 ### give it a spin
 
-    libraryDependencies += "me.lessis" %% "0.1.1" % "hubcat"
+    libraryDependencies += "me.lessis" %% "hubcat" % "0.1.1"
 
 For more info see the [readme](https://github.com/softprops/hubcat#readme)
