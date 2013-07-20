@@ -8,7 +8,7 @@ hip cats, git hubs, good times. asynchronous vvip client of the github enterpris
 
 In sbt...
 
-    libraryDependencies += "me.lessis" %% "hubcat" % "0.1.0"
+    libraryDependencies += "me.lessis" %% "hubcat" % "0.1.1"
 
 ## goals
 
