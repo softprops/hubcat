@@ -16,7 +16,6 @@ fork in Test := true
 // passing env vars to tests is improved in sbt 0.13.0
 javaOptions in Test := Seq("GHUSER", "GHPASS").map(v => "-D%s=%s".format(v, System.getenv(v)))
 
-
 if (sys.env.getOrElse("TRAVIS", "false").toBoolean) {
   println("using travis")
   seq(ivyLoggingLevel := UpdateLogging.Quiet,
@@ -25,9 +24,7 @@ if (sys.env.getOrElse("TRAVIS", "false").toBoolean) {
       logLevel in Test := Level.Info)
 } else seq()
 
-
-
-crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1")
+crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1", "2.10.2")
 
 scalaVersion := "2.10.0"
 
