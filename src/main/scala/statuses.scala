@@ -24,8 +24,9 @@ object Status {
 }
 
 trait RepoStatuses { self: RepoRequests =>
-  case class Statuses(ref: String) extends Client.Completion {
-    private [this] def base = apiHost / user / repo / "statuses" / ref
+  case class Statuses(ref: String)
+    extends Client.Completion {
+    private [this] def base = apiHost / "repos" / user / repo / "statuses" / ref
 
     case class StatusBuilder(
       state: Status.State,
@@ -52,5 +53,6 @@ trait RepoStatuses { self: RepoRequests =>
       StatusBuilder(state)
   }
 
+  /** http://developer.github.com/v3/repos/statuses/#list-statuses-for-a-specific-ref */
   def statuses(ref: String) = Statuses(ref)
 }
