@@ -2,11 +2,11 @@ organization := "me.lessis"
 
 name := "hubcat"
 
-version := "0.1.1"
+version := "0.2.0-SNAPSHOT"
 
 description := "a vvip client of the github enterprises"
 
-libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.10.1")
+libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.0")
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
@@ -24,39 +24,26 @@ if (sys.env.getOrElse("TRAVIS", "false").toBoolean) {
       logLevel in Test := Level.Info)
 } else seq()
 
-crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1", "2.10.2")
+crossScalaVersions := Seq("2.9.3", "2.10.2")
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.2"
 
-scalacOptions <++= (scalaVersion).map { sv =>
-  if (sv.startsWith("2.10")) Seq(Opts.compile.deprecation, "-feature") else Seq(Opts.compile.deprecation)
-}
+scalacOptions := Seq(Opts.compile.deprecation)
 
-publishTo := Some(Opts.resolver.sonatypeStaging)
-
-licenses <<= version(v =>
-      Seq("MIT" ->
-          url("https://github.com/softprops/hubcat/blob/%s/LICENSE" format v)))
+licenses := Seq(
+  "MIT" ->
+  url("https://github.com/softprops/%s/blob/%s/LICENSE" format(name.value, version.value)))
 
 homepage :=
-  Some(url("https://github.com/softprops/hubcat/"))
+  Some(url("https://github.com/softprops/%s/" format(name.value)))
 
 publishArtifact in Test := false
 
 publishMavenStyle := true
 
-pomExtra := (
-  <scm>
-    <url>git@github.com:softprops/hubcat.git</url>
-    <connection>scm:git:git@github.com:softprops/hubcat.git</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>softprops</id>
-      <name>Doug Tangren</name>
-      <url>http://github.com/softprops</url>
-    </developer>
-  </developers>)
+seq(bintraySettings:_*)
+
+bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("github", "gist")
 
 seq(lsSettings:_*)
 

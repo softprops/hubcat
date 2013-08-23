@@ -1,7 +1,6 @@
 package hubcat
 
 import dispatch._
-import com.ning.http.client.RequestBuilder
 import java.util.Date
 
 import org.json4s.{ JArray, JString }
@@ -46,7 +45,7 @@ trait RepoIssues { self: RepoRequests  =>
     _sort: String = "created",
     _order: String = "desc",
     _since: Option[String] = None,
-    _accept: String = Types.GithubJson)
+    _accept: String = Accept.GithubJson)
     extends Client.Completion {
 
     /** http://developer.github.com/v3/issues/#create-an-issue */
@@ -62,10 +61,10 @@ trait RepoIssues { self: RepoRequests  =>
       complete(apiHost / "repos" / user / repo / "assignees" / assignee)
 
     def accepting = new {
-      def raw = copy(_accept = Types.RawJson)
-      def text = copy(_accept = Types.TextJson)
-      def html = copy(_accept = Types.HtmlJson)
-      def fullJson = copy(_accept = Types.FullJson)
+      def raw = copy(_accept = Accept.RawJson)
+      def text = copy(_accept = Accept.TextJson)
+      def html = copy(_accept = Accept.HtmlJson)
+      def fullJson = copy(_accept = Accept.FullJson)
     }
 
     // states (defaults to open)
@@ -220,14 +219,14 @@ trait RepoIssues { self: RepoRequests  =>
 
   /** Requests for a specific Github issue */
   protected [this]
-  case class Issue(id: Int, _accept: String = Types.GithubJson)
+  case class Issue(id: Int, _accept: String = Accept.GithubJson)
      extends Client.Completion {
 
     def accepting = new {
-      def raw = copy(_accept = Types.RawJson)
-      def text = copy(_accept = Types.TextJson)
-      def html = copy(_accept = Types.HtmlJson)
-      def fullJson = copy(_accept = Types.FullJson)
+      def raw = copy(_accept = Accept.RawJson)
+      def text = copy(_accept = Accept.TextJson)
+      def html = copy(_accept = Accept.HtmlJson)
+      def fullJson = copy(_accept = Accept.FullJson)
     }
 
     def labels =

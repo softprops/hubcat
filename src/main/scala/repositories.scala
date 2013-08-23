@@ -1,6 +1,5 @@
 package hubcat
 
-import com.ning.http.client.RequestBuilder
 import dispatch._
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
@@ -70,7 +69,7 @@ trait Repositories { self: Requests =>
   
   protected [this]
   case class RepoFilter(
-    base: RequestBuilder,
+    base: Req,
     _typ: String = "all",
     _sort: String = "full_name",
     _dir: Option[String] = None)
@@ -106,7 +105,7 @@ trait Repositories { self: Requests =>
 
   object AnyRepoRequests {
     /** http://developer.github.com/v3/repos/#list-all-repositories */
-    case class RepoLimiter(base: RequestBuilder, sinceval: Option[Int] = None)
+    case class RepoLimiter(base: Req, sinceval: Option[Int] = None)
        extends Client.Completion {
       def since(id: Int) = copy(sinceval = Some(id)) 
       override def apply[T](handler: Client.Handler[T]) =
@@ -162,11 +161,11 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
 
     // for mixins
     def request[T]
-     (req: RequestBuilder)
+     (req: Req)
      (handler: Client.Handler[T]): Future[T] =
       requests.request(req)(handler)
 
-    def complete(req: RequestBuilder): Client.Completion =
+    def complete(req: Req): Client.Completion =
       requests.complete(req)
 
     def apiHost =

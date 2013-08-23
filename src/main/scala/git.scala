@@ -1,7 +1,6 @@
 package hubcat
 
 import dispatch._
-import com.ning.http.client.RequestBuilder
 
 // application/json
 //application/vnd.github.VERSION.raw
@@ -24,7 +23,7 @@ trait Git { self: RepoRequests =>
 
     override def apply[T](handler: Client.Handler[T]) = {
       val req = apiHost / "repos" / user / repo / "git" / "blobs" / sha
-      request(if (rawval) req <:< Map("Accept" -> Types.Raw) else req)(handler)
+      request(if (rawval) req <:< Map("Accept" -> Accept.Raw) else req)(handler)
     }
   }
 

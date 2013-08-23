@@ -48,16 +48,16 @@ trait RepoPulls
       _state: Option[String] = None,
       _head: Option[String] = None,
       _base: Option[String] = None,
-      _accept: String = Types.GithubJson)
+      _accept: String = Accept.GithubJson)
       extends Client.Completion {
       def state(s: String) = copy(_state = Some(s))
       def head(h: String) = copy(_head = Some(h))
       def base(b: String) = copy(_head = Some(b))
       def accepting = new {
-        def raw = copy(_accept = Types.RawJson)
-        def text = copy(_accept = Types.TextJson)
-        def html = copy(_accept = Types.HtmlJson)
-        def fullJson = copy(_accept = Types.FullJson)
+        def raw = copy(_accept = Accept.RawJson)
+        def text = copy(_accept = Accept.TextJson)
+        def html = copy(_accept = Accept.HtmlJson)
+        def fullJson = copy(_accept = Accept.FullJson)
       }
       override def apply[T](handler: Client.Handler[T]) =
         request(RepoPulls.this.base <:< Map("Accept" -> _accept) <<? Map.empty[String, String] ++
@@ -82,7 +82,7 @@ trait RepoPulls
 
   /** Operations defined for a specific pull request */
   case class Pull(
-    id: Int, _accept: String = Types.GithubJson)
+    id: Int, _accept: String = Accept.GithubJson)
     extends Client.Completion {
 
     private def acceptHeader = Map("Accept" -> _accept)
@@ -127,10 +127,12 @@ trait RepoPulls
     }
 
     def accepting = new {
-      def raw = copy(_accept = Types.RawJson)
-      def text = copy(_accept = Types.TextJson)
-      def html = copy(_accept = Types.HtmlJson)
-      def fullJson = copy(_accept = Types.FullJson)
+      def raw = copy(_accept = Accept.RawJson)
+      def text = copy(_accept = Accept.TextJson)
+      def html = copy(_accept = Accept.HtmlJson)
+      def fullJson = copy(_accept = Accept.FullJson)
+      def diff = copy(_accept = Accept.Diff)
+      def patch = copy(_accept = Accept.Patch)
     }
 
     /** http://developer.github.com/v3/pulls/#get-a-single-pull-request */
