@@ -1,12 +1,12 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
 
 trait RepoHooks extends Jsonizing { self: RepoRequests =>
-  class Hooks extends Client.Completion {
+  class Hooks extends Client.Completion[Response] {
     private [this] def base = apiHost / "repos" / user / repo / "hooks"
 
     protected [this]
@@ -18,7 +18,7 @@ trait RepoHooks extends Jsonizing { self: RepoRequests =>
       _active: Option[Boolean] = None,
       _addevents: List[String] = Nil,
       _rmevents: List[String] = Nil)
-      extends Client.Completion {
+      extends Client.Completion[Response] {
 
       def config(props: (String, Any)*) =
         copy(_config = props.toMap)

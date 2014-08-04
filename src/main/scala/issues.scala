@@ -1,6 +1,7 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
+
 import java.util.Date
 
 import org.json4s.{ JArray, JString }
@@ -46,7 +47,7 @@ trait RepoIssues { self: RepoRequests  =>
     _order: String = "desc",
     _since: Option[String] = None,
     _accept: String = Accept.GithubJson)
-    extends Client.Completion {
+    extends Client.Completion[Response] {
 
     /** http://developer.github.com/v3/issues/#create-an-issue */
     def open(title: String) =
@@ -132,7 +133,7 @@ trait RepoIssues { self: RepoRequests  =>
     _milestone: Option[Int] = None,
     _labels: Option[Seq[String]] = None,
     _state: Option[String] = None)
-     extends Client.Completion
+     extends Client.Completion[Response]
         with Jsonizing {
 
     def title(t: String) = copy(_title = Some(t))
@@ -187,7 +188,7 @@ trait RepoIssues { self: RepoRequests  =>
 
   /** Requests for accessing and creating repo labels */
   protected [this]
-  object Labels extends Client.Completion {
+  object Labels extends Client.Completion[Response] {
     /** http://developer.github.com/v3/issues/labels/#list-all-labels-for-this-repository */
     def apply[T](hand: Client.Handler[T]) =
       request(apiHost / "repos" / user / repo / "labels")(hand)
@@ -220,7 +221,7 @@ trait RepoIssues { self: RepoRequests  =>
   /** Requests for a specific Github issue */
   protected [this]
   case class Issue(id: Int, _accept: String = Accept.GithubJson)
-     extends Client.Completion {
+     extends Client.Completion[Response] {
 
     def accepting = new {
       def raw = copy(_accept = Accept.RawJson)
@@ -264,7 +265,7 @@ trait RepoIssues { self: RepoRequests  =>
 
     /** Github issue comments */
     protected [this]
-    object Comments extends Client.Completion {
+    object Comments extends Client.Completion[Response] {
       def get(cid: Int) =
         complete(apiHost / "repos" / user / repo / "issues" / id.toString / "comments" / cid.toString)
 

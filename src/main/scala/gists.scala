@@ -1,6 +1,7 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
+import dispatch.Req
 import java.util.Date
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
@@ -13,7 +14,7 @@ trait Gists { self: Requests =>
     _files: Map[String, String] = Map.empty[String, String],
     _desc: Option[String] = None,
     _vis: Boolean = true)
-     extends Client.Completion
+     extends Client.Completion[Response]
         with Jsonizing {
 
     def desc(d: String) = copy(_desc = Some(d))
@@ -41,7 +42,7 @@ trait Gists { self: Requests =>
     id: String,
     _files: Map[String, String] = Map.empty[String, String],
     _desc: Option[String] = None)
-     extends Client.Completion
+     extends Client.Completion[Response]
         with Jsonizing {
 
     def desc(d: String) = copy(_desc = Some(d))
@@ -64,7 +65,7 @@ trait Gists { self: Requests =>
    protected [this]
    object GistMethods {
     case class GistLimiter(base: Req, sinceval: Option[String] = None)
-    extends Client.Completion {
+    extends Client.Completion[Response] {
       def since(d: Date) = copy(sinceval = Some(ISO8601(d)))
       override def apply[T](handler: Client.Handler[T]) =
         request(base <<? Map.empty[String,String]++sinceval.map("since" -> _))(handler)
@@ -85,11 +86,11 @@ trait Gists { self: Requests =>
 
     protected [this]
     class Gist(id: String)
-     extends Client.Completion {
+     extends Client.Completion[Response] {
 
        protected [this]
        case class Comment(cid: Int, accept: String = Accept.GithubJson)
-         extends Client.Completion {
+         extends Client.Completion[Response] {
 
            def accepting = new {
              def raw = copy(accept = Accept.RawJson)

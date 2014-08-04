@@ -1,6 +1,6 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
 
 trait Searching { self: Requests =>
   object Search {

@@ -1,6 +1,6 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
@@ -9,30 +9,23 @@ object Status {
   sealed trait State {
     def value: String
   }
-  object Pending extends State {
-    val value = "pending"
-  }
-  object Success extends State {
-    val value = "success"
-  }
-  object Error extends State {
-    val value = "error"
-  }
-  object Failure extends State {
-    val value = "failure"
-  }
+  abstract class Value(val value: String) extends State
+  object Pending extends Value("pending")
+  object Success extends Value("success")
+  object Error extends Value("error")
+  object Failure extends Value("failure")
 }
 
 trait RepoStatuses { self: RepoRequests =>
   case class Statuses(ref: String)
-    extends Client.Completion {
+    extends Client.Completion[Response] {
     private [this] def base = apiHost / "repos" / user / repo / "statuses" / ref
 
     case class StatusBuilder(
       state: Status.State,
       _targetUrl: Option[String] = None,
       _desc: Option[String] = None)
-      extends Client.Completion {
+      extends Client.Completion[Response] {
       def targetUrl(target: String) = copy(_targetUrl = Some(target))
       def desc(d: String) = copy(_desc = Some(d))
       override def apply[T](handler: Client.Handler[T]) =

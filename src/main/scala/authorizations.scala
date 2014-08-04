@@ -1,6 +1,6 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
@@ -13,7 +13,7 @@ trait Authorizations { self: Requests =>
     _note: Option[String] = None,
     _url: Option[String] = None, 
     _client: Option[(String, String)] = None)
-     extends Client.Completion
+     extends Client.Completion[Response]
         with Jsonizing {
 
     def scopes(s: String*) = copy(_scopes = Some(s))
@@ -44,7 +44,7 @@ trait Authorizations { self: Requests =>
     _scopeop: Option[Boolean] = None,
     _url: Option[String] = None,
     _note: Option[String] = None)
-     extends Client.Completion
+     extends Client.Completion[Response]
         with Jsonizing {
 
     def note(n: String) = copy(_note = Some(n))

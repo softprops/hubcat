@@ -1,6 +1,7 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
+import dispatch.Req
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
@@ -24,7 +25,7 @@ trait Repositories { self: Requests =>
     _hasDownloads: Boolean = true,
     _autoinit: Boolean = false,
     _ignoreTemplate: Option[String] = None)
-    extends Client.Completion
+    extends Client.Completion[Response]
         with Jsonizing {
 
     def desc(d: String) = copy(_desc = Some(d))
@@ -73,7 +74,7 @@ trait Repositories { self: Requests =>
     _typ: String = "all",
     _sort: String = "full_name",
     _dir: Option[String] = None)
-     extends Client.Completion {
+     extends Client.Completion[Response] {
 
     // type
 
@@ -106,7 +107,7 @@ trait Repositories { self: Requests =>
   object AnyRepoRequests {
     /** http://developer.github.com/v3/repos/#list-all-repositories */
     case class RepoLimiter(base: Req, sinceval: Option[Int] = None)
-       extends Client.Completion {
+       extends Client.Completion[Response] {
       def since(id: Int) = copy(sinceval = Some(id)) 
       override def apply[T](handler: Client.Handler[T]) =
         request(base <<? Map.empty[String, String] ++
@@ -129,7 +130,7 @@ trait Repositories { self: Requests =>
 
   case class OrganizationRepoRequests(org: String) {
      case class RepoFilter(_type: Option[String] = None)
-          extends Client.Completion {
+          extends Client.Completion[Response] {
        def forks = copy(_type = Some("forks"))
        def sources = copy(_type = Some("sources"))
        override def apply[T](handler: Client.Handler[T]) =
@@ -152,7 +153,7 @@ trait Repositories { self: Requests =>
 
 /** Repository requests for a specific repo */
 class RepoRequests(val user: String, val repo: String, requests: Requests)
-    extends Client.Completion
+    extends Client.Completion[Response]
        with Git
        with RepoIssues
        with RepoPulls
@@ -165,7 +166,7 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
      (handler: Client.Handler[T]): Future[T] =
       requests.request(req)(handler)
 
-    def complete(req: Req): Client.Completion =
+    def complete(req: Req): Client.Completion[Response] =
       requests.complete(req)
 
     def apiHost =
@@ -217,7 +218,7 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
       event: String,
       callback: String,
       _secret: Option[String] = None)
-      extends Client.Completion {
+      extends Client.Completion[Response] {
       private [this] def base = apiHost / "hub"
       def secret(sec: String) = copy(_secret = Some(sec))
 

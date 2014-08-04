@@ -1,22 +1,22 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
 
 trait RepoPulls
-  extends Client.Completion { self: RepoRequests =>
+  extends Client.Completion[Response] { self: RepoRequests =>
   private def base = apiHost / "repos" / user / repo / "pulls"
-  class Pulls extends Client.Completion {
+  class Pulls extends Client.Completion[Response] {
 
-    class PullsComments extends Client.Completion {
+    class PullsComments extends Client.Completion[Response] {
       private [this] def base = apiHost / "repos" / user / repo / "pulls" / "comments"
 
       case class Filter(
         _sort: Option[String] = None,
         _direction: Option[String] = None)
-        extends Client.Completion {
+        extends Client.Completion[Response] {
         /** http://developer.github.com/v3/pulls/comments/#list-comments-on-a-pull-request */
         override def apply[T](handler: Client.Handler[T]) =
           request(base <<? Map.empty[String, String] ++
@@ -24,7 +24,7 @@ trait RepoPulls
                   _direction.map("direction" -> _))(handler)
       }
 
-      case class Comment(id: Int) extends Client.Completion {
+      case class Comment(id: Int) extends Client.Completion[Response] {
         /** http://developer.github.com/v3/pulls/comments/#get-a-single-comment */
         override def apply[T](handler: Client.Handler[T]) =
           request(base  / id)(handler)
@@ -49,7 +49,7 @@ trait RepoPulls
       _head: Option[String] = None,
       _base: Option[String] = None,
       _accept: String = Accept.GithubJson)
-      extends Client.Completion {
+      extends Client.Completion[Response] {
       def state(s: String) = copy(_state = Some(s))
       def head(h: String) = copy(_head = Some(h))
       def base(b: String) = copy(_head = Some(b))
@@ -83,11 +83,11 @@ trait RepoPulls
   /** Operations defined for a specific pull request */
   case class Pull(
     id: Int, _accept: String = Accept.GithubJson)
-    extends Client.Completion {
+    extends Client.Completion[Response] {
 
     private def acceptHeader = Map("Accept" -> _accept)
 
-    class PullComments extends Client.Completion {
+    class PullComments extends Client.Completion[Response] {
       private [this] def base = apiHost / "repos" / user / repo / "pulls" / id / "comments"
 
       /** http://developer.github.com/v3/pulls/comments/#list-comments-on-a-pull-request */
@@ -113,7 +113,7 @@ trait RepoPulls
       _title: Option[String] = None,
       _body: Option[String] = None,
       _state: Option[String] = None)
-      extends Client.Completion {
+      extends Client.Completion[Response] {
       def title(t: String) = copy(_title = Some(t))
       def body(b: String) = copy(_body = Some(b))
       def state(s: String) = copy(_state = Some(s))
@@ -162,10 +162,10 @@ trait RepoPulls
   case class PullBuilder(
     title: String,
     head: String,
-    _base: String = "master",
+    _base: String         = "master",
     _body: Option[String] = None,
-    _issue: Option[Int] = None)
-    extends Client.Completion {
+    _issue: Option[Int]   = None)
+    extends Client.Completion[Response] {
     def body(b: String) = copy(_body = Some(b))
     def base(b: String) = copy(_base = b)
     override def apply[T](handler: Client.Handler[T]) =

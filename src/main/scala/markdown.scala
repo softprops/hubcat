@@ -1,6 +1,6 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
 
 object Markdown {
   def Plain = "markdown"
@@ -13,7 +13,7 @@ trait Markdown { self: Requests =>
     text: String,
     _mode: Option[String] = None,
     _context: Option[String] = None)
-     extends Client.Completion
+     extends Client.Completion[Response]
         with Jsonizing {
 
     def context(user: String, repo: String) =

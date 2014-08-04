@@ -1,6 +1,6 @@
 package hubcat
 
-import dispatch._
+import dispatch.Req
 
 sealed trait Credentials {
   def sign(req: Req): Req

@@ -1,12 +1,12 @@
 package hubcat
 
-import dispatch._
+import com.ning.http.client.Response
 
 // application/json
 //application/vnd.github.VERSION.raw
 trait Git { self: RepoRequests =>
   case class TreeQueryBuilder(sha: String, recur: Option[Int] = None)
-     extends Client.Completion {
+     extends Client.Completion[Response] {
 
     def recursive = copy(recur = Some(1))
 
@@ -17,7 +17,7 @@ trait Git { self: RepoRequests =>
 
   /** http://developer.github.com/v3/git/blobs/ */
   case class BlobQueryBuilder(sha: String, rawval: Boolean = false)
-     extends Client.Completion {
+     extends Client.Completion[Response] {
    
     def raw = copy(rawval = true)
 
