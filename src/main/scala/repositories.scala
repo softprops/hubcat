@@ -58,6 +58,9 @@ trait Repositories { self: Requests =>
 
   protected [this]
   class UserRequests(user: String) {
+    def info[T](handler: Client.Handler[T]) =
+      request(apiHost / "users" / user)(handler)
+
     /** http://developer.github.com/v3/repos/#list-user-repositories */
     def repos =
       RepoFilter(apiHost / "users" / user / "repos")
