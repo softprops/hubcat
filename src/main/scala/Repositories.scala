@@ -3,8 +3,8 @@ package hubcat
 import com.ning.http.client.Response
 import dispatch.Req
 import org.json4s.JsonDSL._
-import org.json4s.native.Printer.compact
-import org.json4s.native.JsonMethods.render
+import org.json4s.JValue
+import org.json4s.native.JsonMethods.{ compact, render }
 import scala.concurrent.Future
 
 // cli.repositories.all
@@ -13,20 +13,20 @@ import scala.concurrent.Future
 // cli.user(foo).repos....
 // cli.repo(user, repo)...
 trait Repositories { self: Requests =>
+
   /** Builder for creating repositories */
   protected [this] case class RepoBuilder(
     name: String,
-    _org: Option[String] = None,
-    _desc: Option[String] = None,
-    _teamId: Option[Int] = None,
-    _homepage: Option[String] = None,
-    _hasIssues: Boolean = true,
-    _hasWiki: Boolean = true,
-    _hasDownloads: Boolean = true,
-    _autoinit: Boolean = false,
+    _org: Option[String]            = None,
+    _desc: Option[String]           = None,
+    _teamId: Option[Int]            = None,
+    _homepage: Option[String]       = None,
+    _hasIssues: Boolean             = true,
+    _hasWiki: Boolean               = true,
+    _hasDownloads: Boolean          = true,
+    _autoinit: Boolean              = false,
     _ignoreTemplate: Option[String] = None)
-    extends Client.Completion[Response]
-        with Jsonizing {
+    extends Client.Completion[Response] {
 
     def desc(d: String) = copy(_desc = Some(d))
     def homepage(h: String) = copy(_homepage = Some(h))
@@ -40,21 +40,18 @@ trait Repositories { self: Requests =>
     override def apply[T](handler: Client.Handler[T]) =
       request(
         _org.map(o => apiHost.POST / "orgs" / o / "repos")
-            .getOrElse(apiHost.POST / "user" / "repos") << pjson)(handler)
-
-    private def pjson = {
-      val js =
-        ("name" -> name) ~
-        ("description" -> jStringOrNone(_desc)) ~
-        ("homepage" -> jStringOrNone(_homepage)) ~
-        ("has_issues" -> _hasIssues) ~
-        ("has_wiki" -> _hasWiki) ~
-        ("has_downloads" -> _hasDownloads) ~
-        ("team_id" -> jIntOrNone(_teamId)) ~
-        ("auto_init" -> _autoinit) ~
-        ("gitignore_template" -> jStringOrNone(_ignoreTemplate))
-      compact(render(js))
-    }
+            .getOrElse(apiHost.POST / "user" / "repos")
+        << json.str(
+          ("name"          -> name) ~
+          ("description"   -> _desc) ~
+          ("homepage"      -> _homepage) ~
+          ("has_issues"    -> _hasIssues) ~
+          ("has_wiki"      -> _hasWiki) ~
+          ("has_downloads" -> _hasDownloads) ~
+          ("team_id"       -> _teamId) ~
+          ("auto_init"     -> _autoinit) ~
+          ("gitignore_template" -> _ignoreTemplate)))(handler)
+      
   }
 
   protected [this]
@@ -71,8 +68,8 @@ trait Repositories { self: Requests =>
   protected [this]
   case class RepoFilter(
     base: Req,
-    _typ: String = "all",
-    _sort: String = "full_name",
+    _typ: String         = "all",
+    _sort: String        = "full_name",
     _dir: Option[String] = None)
      extends Client.Completion[Response] {
 
@@ -129,8 +126,9 @@ trait Repositories { self: Requests =>
     AnyRepoRequests
 
   case class OrganizationRepoRequests(org: String) {
-     case class RepoFilter(_type: Option[String] = None)
-          extends Client.Completion[Response] {
+     case class RepoFilter(
+       _type: Option[String] = None)
+       extends Client.Completion[Response] {
        def forks = copy(_type = Some("forks"))
        def sources = copy(_type = Some("sources"))
        override def apply[T](handler: Client.Handler[T]) =
@@ -152,15 +150,24 @@ trait Repositories { self: Requests =>
 }
 
 /** Repository requests for a specific repo */
-class RepoRequests(val user: String, val repo: String, requests: Requests)
-    extends Client.Completion[Response]
-       with Git
-       with RepoIssues
-       with RepoPulls
-       with RepoStatuses
-       with RepoHooks {
+class RepoRequests(
+  val user: String,
+  val repo: String,
+  requests: Requests)
+  extends Client.Completion[Response]
+     with Git
+     with RepoIssues
+     with RepoPulls
+     with RepoStatuses
+     with RepoHooks
+     with RepoReleases {
 
     // for mixins
+
+    object json {
+      def str(js: JValue) = compact(render(js))
+    }
+
     def request[T]
      (req: Req)
      (handler: Client.Handler[T]): Future[T] =
@@ -225,15 +232,13 @@ class RepoRequests(val user: String, val repo: String, requests: Requests)
       // fixme: will get Needs hub.callback if params
       // provided in request body. escaping issue?
       override def apply[T](hand: Client.Handler[T]) =
-        request(base.POST <<? pmap)(hand)
-
-      private def pmap = Map(
+        request(base.POST <<? Map(
         "hub.mode" -> mode,
         "hub.callback" -> callback,
         "hub.topic" -> "https://github.com/%s/%s/events/%s"
                         .format(user, repo, event)
         ) ++
-        _secret.map("hub.secret" -> _)
+        _secret.map("hub.secret" -> _))(hand)
     }
 
     def subscribe(event: String, callback: String) =

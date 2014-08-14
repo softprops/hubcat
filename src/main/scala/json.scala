@@ -2,7 +2,7 @@ package hubcat
 
 import org.json4s.{ JBool, JString, JNothing, JValue, JInt }
 
-trait Jsonizing {  
+/*trait Jsonizing {  
   def jStringOrNone(opt: Option[String]) =
     opt match { case Some(s) => JString(s) case _ => JNothing }
 
@@ -11,4 +11,4 @@ trait Jsonizing {
 
   def jBoolOrNone(opt: Option[Boolean]) =
     opt match { case Some(b) => JBool(b) case _ => JNothing }
-}
+}*/

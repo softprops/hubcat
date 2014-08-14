@@ -4,18 +4,15 @@ import com.ning.http.client.Response
 import dispatch.Req
 import java.util.Date
 import org.json4s.JsonDSL._
-import org.json4s.native.Printer.compact
-import org.json4s.native.JsonMethods.render
 
 trait Gists { self: Requests =>
 
   protected [this]
   case class GistBuilder(
     _files: Map[String, String] = Map.empty[String, String],
-    _desc: Option[String] = None,
-    _vis: Boolean = true)
-     extends Client.Completion[Response]
-        with Jsonizing {
+    _desc: Option[String]       = None,
+    _vis: Boolean               = true)
+    extends Client.Completion[Response] {
 
     def desc(d: String) = copy(_desc = Some(d))
     def pub = copy(_vis = true)
@@ -26,24 +23,21 @@ trait Gists { self: Requests =>
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost.POST / "gists" << pjson)(handler)
 
-    private def pjson = {
-      val js =
+    private def pjson = 
+      json.str(
         ("public" -> _vis) ~ 
-        ("description" -> jStringOrNone(_desc)) ~
+        ("description" -> _desc) ~
         ("files" -> _files.map {
           case (name, content) => (name -> ("content" -> content))
-        })
-      compact(render(js))
-    }
+        }))
   }
 
   protected [this]
   case class RegistBuilder(
     id: String,
     _files: Map[String, String] = Map.empty[String, String],
-    _desc: Option[String] = None)
-     extends Client.Completion[Response]
-        with Jsonizing {
+    _desc: Option[String]       = None)
+    extends Client.Completion[Response] {
 
     def desc(d: String) = copy(_desc = Some(d))
     def file(content: String, name: String = "f%s" format _files.size) =
@@ -52,20 +46,19 @@ trait Gists { self: Requests =>
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost.PATCH / "gists" / id << pjson)(handler)
 
-    private def pjson = {
-      val js =
-        ("description" -> jStringOrNone(_desc)) ~
+    private def pjson =
+      json.str(
+        ("description" -> _desc) ~
         ("files" -> _files.map {
           case (name, content) => (name -> ("content" -> content))
-        })
-      compact(render(js))
-    }
+        }))
   }
 
-   protected [this]
-   object GistMethods {
-    case class GistLimiter(base: Req, sinceval: Option[String] = None)
-    extends Client.Completion[Response] {
+   object gists {
+    case class GistLimiter(
+      base: Req,
+      sinceval: Option[String] = None)
+      extends Client.Completion[Response] {
       def since(d: Date) = copy(sinceval = Some(ISO8601(d)))
       override def apply[T](handler: Client.Handler[T]) =
         request(base <<? Map.empty[String,String]++sinceval.map("since" -> _))(handler)
@@ -105,7 +98,7 @@ trait Gists { self: Requests =>
 
            /** http://developer.github.com/v3/gists/comments/#edit-a-comment */
            def edit(body: String) = {
-             complete(apiHost.PATCH / "gists" / id / "comments" / cid.toString << compact(render(("body" -> body))))
+             complete(apiHost.PATCH / "gists" / id / "comments" / cid.toString << json.str(("body" -> body)))
            }
 
            /** http://developer.github.com/v3/gists/comments/#get-a-single-comment */
@@ -121,9 +114,8 @@ trait Gists { self: Requests =>
          Comment(cid)
 
        /** http://developer.github.com/v3/gists/comments/#create-a-comment */
-       def comment(body: String) = {
-         complete(apiHost.POST / "gists" / id / "comments" << compact(render(("body" -> body))))
-       }
+       def comment(body: String) =
+         complete(apiHost.POST / "gists" / id / "comments" << json.str(("body" -> body)))
          
        /** http://developer.github.com/v3/gists/#get-a-single-gist */
        override def apply[T](hand: Client.Handler[T]) =
@@ -161,6 +153,4 @@ trait Gists { self: Requests =>
     def delete(id: String) = 
       complete(apiHost.DELETE / "gists" / id)
    }
-
-  def gists = GistMethods
 }

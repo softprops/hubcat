@@ -2,19 +2,16 @@ package hubcat
 
 import com.ning.http.client.Response
 import org.json4s.JsonDSL._
-import org.json4s.native.Printer.compact
-import org.json4s.native.JsonMethods.render
 
 trait Authorizations { self: Requests =>
   /** Builder for new authorizations */
   protected [this]
   case class AuthorizationBuilder(
-    _scopes: Option[Seq[String]] = None,
-    _note: Option[String] = None,
-    _url: Option[String] = None, 
+    _scopes: Option[Seq[String]]      = None,
+    _note: Option[String]             = None,
+    _url: Option[String]              = None, 
     _client: Option[(String, String)] = None)
-     extends Client.Completion[Response]
-        with Jsonizing {
+    extends Client.Completion[Response] {
 
     def scopes(s: String*) = copy(_scopes = Some(s))
     def note(n: String) = copy(_note = Some(n))
@@ -27,12 +24,12 @@ trait Authorizations { self: Requests =>
     private def pjson = {
       val base = 
         ("scopes" -> _scopes.map(_.toList).getOrElse(Nil)) ~
-        ("note" -> jStringOrNone(_note)) ~
-        ("note_url" -> jStringOrNone(_url))
+        ("note" -> _note) ~
+        ("note_url" -> _url)
       val js = _client.map {
         case (id, sec) => base ~ ("client_id" -> id) ~ ("client_secret" -> sec)
       }.getOrElse(base)
-      compact(render(js))
+      json.str(js)
     }
   }
 
@@ -41,11 +38,10 @@ trait Authorizations { self: Requests =>
   case class ReauthorizeBuilder(
     id: String,
     _scopes: Option[Seq[String]] = None,
-    _scopeop: Option[Boolean] = None,
-    _url: Option[String] = None,
-    _note: Option[String] = None)
-     extends Client.Completion[Response]
-        with Jsonizing {
+    _scopeop: Option[Boolean]    = None,
+    _url: Option[String]         = None,
+    _note: Option[String]        = None)
+    extends Client.Completion[Response] {
 
     def note(n: String) = copy(_note = Some(n))
     def url(u: String) = copy(_url = Some(u))
@@ -61,8 +57,8 @@ trait Authorizations { self: Requests =>
 
     private def pjson = {
       val note =
-        ("note" -> jStringOrNone(_note)) ~
-        ("note_url" -> jStringOrNone(_url))
+        ("note" -> _note) ~
+        ("note_url" -> _url)
       val js = _scopeop.map {
         op =>
           val scps = if (op) ("add_scopes" -> _scopes.map(_.toList))
@@ -70,7 +66,7 @@ trait Authorizations { self: Requests =>
           note ~ scps
       }.getOrElse(note ~ ("scopes" -> _scopes.map(_.toList)))
 
-      compact(render(js))
+      json.str(js)
     } 
   }
 

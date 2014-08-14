@@ -6,8 +6,6 @@ import java.util.Date
 
 import org.json4s.{ JArray, JString }
 import org.json4s.JsonDSL._
-import org.json4s.native.Printer.compact
-import org.json4s.native.JsonMethods.render
 
 // cli.issues
 // cli.userissues
@@ -37,10 +35,10 @@ trait RepoIssues { self: RepoRequests  =>
   case class RepoIssuesFilter(
     user: String,
     repo: String,
-    _milestone: String = "none",
-    _state: String = "open",
-    _assignee: Option[String] = None,
-    _creator: Option[String] = None,
+    _milestone: String         = "none",
+    _state: String             = "open",
+    _assignee: Option[String]  = None,
+    _creator: Option[String]   = None,
     _mentioned: Option[String] = None,
     _labels: Option[Traversable[String]] = None,
     _sort: String = "created",
@@ -133,8 +131,7 @@ trait RepoIssues { self: RepoRequests  =>
     _milestone: Option[Int] = None,
     _labels: Option[Seq[String]] = None,
     _state: Option[String] = None)
-     extends Client.Completion[Response]
-        with Jsonizing {
+     extends Client.Completion[Response] {
 
     def title(t: String) = copy(_title = Some(t))
     def body(b: String) = copy(_body = Some(b))
@@ -149,17 +146,14 @@ trait RepoIssues { self: RepoRequests  =>
         apiHost.POST / "repos" / user / repo / "issues"
       ) << pjson)(handler)
 
-    private def pjson = {
-      val js =
-        ("title" -> jStringOrNone(_title)) ~
-        ("body" -> jStringOrNone(_body)) ~
-        ("assignee" -> jStringOrNone(_assignee)) ~
-        ("milestone" -> jIntOrNone(_milestone)) ~
+    private def pjson =
+      json.str(
+        ("title" -> _title) ~
+        ("body" -> _body) ~
+        ("assignee" -> _assignee) ~
+        ("milestone" -> _milestone) ~
         ("labels" -> _labels.map(_.toList)) ~
-        ("state" -> jStringOrNone(_state))
-      
-      compact(render(js))
-    }
+        ("state" -> _state))
   }
 
   /** Milestone methods */
@@ -202,7 +196,7 @@ trait RepoIssues { self: RepoRequests  =>
      val js =
        ("name" -> name) ~
        ("color" -> color)
-     complete(apiHost.POST / "repos" / user / repo / "labels" << compact(render(js)))
+     complete(apiHost.POST / "repos" / user / repo / "labels" << json.str(js))
    }
 
    /** http://developer.github.com/v3/issues/labels/#update-a-label */
@@ -210,7 +204,7 @@ trait RepoIssues { self: RepoRequests  =>
      val js =
        ("name" -> name) ~
        ("color" -> color)
-     complete(apiHost.PATCH / "repos" / user / repo / "labels" << compact(render(js)))
+     complete(apiHost.PATCH / "repos" / user / repo / "labels" << json.str(js))
    }
 
    /** http://developer.github.com/v3/issues/labels/#delete-a-label */
@@ -236,13 +230,13 @@ trait RepoIssues { self: RepoRequests  =>
     /** http://developer.github.com/v3/issues/labels/#add-labels-to-an-issue */
     def label(labs: String*) = {
       val js = jlabs(labs.toList)
-      complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "labels" << compact(render(js)))
+      complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "labels" << json.str(js))
     }
 
     /** http://developer.github.com/v3/issues/labels/#replace-all-labels-for-an-issue */
     def relabel(labs: String*) = {
       val js = jlabs(labs.toList)
-      complete(apiHost.PATCH / "repos" / user / repo / "issues" / id.toString / "labels" << compact(render(js)))
+      complete(apiHost.PATCH / "repos" / user / repo / "issues" / id.toString / "labels" << json.str(js))
     }
 
     private def jlabs(labs: List[String]) =
@@ -270,10 +264,10 @@ trait RepoIssues { self: RepoRequests  =>
         complete(apiHost / "repos" / user / repo / "issues" / id.toString / "comments" / cid.toString)
 
       def create(body: String) =
-        complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "comments" << compact(render(("body" -> body))))
+        complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "comments" << json.str(("body" -> body)))
 
       def edit(cid: Int, body: String) =
-        complete(apiHost.PATCH / "repos" / user / repo / "issues" / "comments" / cid.toString << compact(render(("body" -> body))))
+        complete(apiHost.PATCH / "repos" / user / repo / "issues" / "comments" / cid.toString << json.str(("body" -> body)))
 
       def delete(cid: Int) =
         complete(apiHost.DELETE / "repos" / user / repo / "issues" / "comments" / cid.toString)

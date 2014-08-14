@@ -6,9 +6,9 @@ version := "0.2.0-SNAPSHOT"
 
 description := "a vvip client of the github enterprises"
 
-libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.1")
-
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+  "net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2")
 
 // needed for java test options
 fork in Test := true
@@ -24,15 +24,15 @@ if (sys.env.getOrElse("TRAVIS", "false").toBoolean) {
       logLevel in Test := Level.Info)
 } else seq()
 
-crossScalaVersions := Seq("2.9.3", "2.10.2")
+crossScalaVersions := Seq("2.10.4", "2.11.1")
 
-scalaVersion := "2.10.2"
+scalaVersion := crossScalaVersions.value.last
 
 scalacOptions := Seq(Opts.compile.deprecation)
 
 licenses := Seq(
   "MIT" ->
-  url("https://github.com/softprops/%s/blob/%s/LICENSE" format(name.value, version.value)))
+  url(s"https://github.com/softprops/${name.value}/blob/${version.value}/LICENSE"))
 
 homepage :=
   Some(url("https://github.com/softprops/%s/" format(name.value)))

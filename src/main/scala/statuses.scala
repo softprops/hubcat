@@ -2,18 +2,16 @@ package hubcat
 
 import com.ning.http.client.Response
 import org.json4s.JsonDSL._
-import org.json4s.native.Printer.compact
-import org.json4s.native.JsonMethods.render
 
 object Status {
   sealed trait State {
-    def value: String
+    def value: String =
+      getClass.getSimpleName.toLowerCase.replace("""$""", "")
   }
-  abstract class Value(val value: String) extends State
-  object Pending extends Value("pending")
-  object Success extends Value("success")
-  object Error extends Value("error")
-  object Failure extends Value("failure")
+  object Pending extends State
+  object Success extends State
+  object Error extends State
+  object Failure extends State
 }
 
 trait RepoStatuses { self: RepoRequests =>
@@ -24,17 +22,15 @@ trait RepoStatuses { self: RepoRequests =>
     case class StatusBuilder(
       state: Status.State,
       _targetUrl: Option[String] = None,
-      _desc: Option[String] = None)
+      _desc: Option[String]      = None)
       extends Client.Completion[Response] {
       def targetUrl(target: String) = copy(_targetUrl = Some(target))
       def desc(d: String) = copy(_desc = Some(d))
       override def apply[T](handler: Client.Handler[T]) =
-        request(base.POST << pmap)(handler)
-
-      private def pmap =
-        compact(render(("state" -> state.value) ~
-                       ("target_url" -> _targetUrl) ~
-                       ("description" -> _desc)))
+        request(base.POST << json.str(
+          ("state" -> state.value) ~
+          ("target_url" -> _targetUrl) ~
+          ("description" -> _desc)))(handler)
     }
 
     /** http://developer.github.com/v3/repos/statuses/#list-statuses-for-a-specific-ref */

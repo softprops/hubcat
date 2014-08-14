@@ -2,19 +2,21 @@ package hubcat
 
 import com.ning.http.client.Response
 import org.json4s.JsonDSL._
-import org.json4s.native.Printer.compact
-import org.json4s.native.JsonMethods.render
 
 trait RepoPulls
   extends Client.Completion[Response] { self: RepoRequests =>
-  private def base = apiHost / "repos" / user / repo / "pulls"
-  class Pulls extends Client.Completion[Response] {
+  private def base =
+    apiHost / "repos" / user / repo / "pulls"
 
-    class PullsComments extends Client.Completion[Response] {
-      private [this] def base = apiHost / "repos" / user / repo / "pulls" / "comments"
+  object pulls extends Client.Completion[Response] {
+
+    object comments
+      extends Client.Completion[Response] {
+      private [this] def base =
+        apiHost / "repos" / user / repo / "pulls" / "comments"
 
       case class Filter(
-        _sort: Option[String] = None,
+        _sort: Option[String]     = None,
         _direction: Option[String] = None)
         extends Client.Completion[Response] {
         /** http://developer.github.com/v3/pulls/comments/#list-comments-on-a-pull-request */
@@ -30,7 +32,7 @@ trait RepoPulls
           request(base  / id)(handler)
 
         /** http://developer.github.com/v3/pulls/comments/#edit-a-comment */
-        def edit(body: String) = complete(base.POST / id << compact(render(("body" -> body))))
+        def edit(body: String) = complete(base.POST / id << json.str(("body" -> body)))
 
         /** http://developer.github.com/v3/pulls/comments/#delete-a-comment */
         def delete = complete(base.DELETE / id)
@@ -76,18 +78,17 @@ trait RepoPulls
     /** http://developer.github.com/v3/pulls/#create-a-pull-request */
     def create(title: String, head: String) =
       PullBuilder(title, head)
-
-    def comments = new PullsComments
   }
 
   /** Operations defined for a specific pull request */
   case class Pull(
-    id: Int, _accept: String = Accept.GithubJson)
+    id: Int,
+    _accept: String = Accept.GithubJson)
     extends Client.Completion[Response] {
 
     private def acceptHeader = Map("Accept" -> _accept)
 
-    class PullComments extends Client.Completion[Response] {
+    object comments extends Client.Completion[Response] {
       private [this] def base = apiHost / "repos" / user / repo / "pulls" / id / "comments"
 
       /** http://developer.github.com/v3/pulls/comments/#list-comments-on-a-pull-request */
@@ -96,16 +97,16 @@ trait RepoPulls
 
       /** Starts a new thread of review. http://developer.github.com/v3/pulls/comments/#create-a-comment */
       def create(body: String, commit: String, path: String, position: Int) =
-        complete(base.POST << compact(
-          render(("body" -> body) ~
-                 ("commit_id" -> commit) ~
-                 ("path" -> path) ~
-                 ("position" -> position))))
+        complete(base.POST << json.str(
+          ("body" -> body) ~
+          ("commit_id" -> commit) ~
+          ("path" -> path) ~
+          ("position" -> position)))
 
       /** Creates a response in reply to a thread of review. http://developer.github.com/v3/pulls/comments/#create-a-comment */
       def reply(to: Int, body: String) =
-        complete(base.POST << compact(render(
-          ("body" -> body) ~ ("in_reply_to" -> to))))
+        complete(base.POST << json.str(
+          ("body" -> body) ~ ("in_reply_to" -> to)))
     }
 
     /** Update operation fields */
@@ -118,12 +119,10 @@ trait RepoPulls
       def body(b: String) = copy(_body = Some(b))
       def state(s: String) = copy(_state = Some(s))
       override def apply[T](handler: Client.Handler[T]) =
-        request(base.PATCH / id << pmap)(handler)
-      private def pmap =
-        compact(render(
+        request(base.PATCH / id << json.str(
           ("title" -> _title) ~
           ("body"  -> _body) ~
-          ("state" -> _state)))
+          ("state" -> _state)))(handler)
     }
 
     def accepting = new {
@@ -153,9 +152,7 @@ trait RepoPulls
 
     /** http://developer.github.com/v3/pulls/#merge-a-pull-request-merge-buttontrade */
     def merge(msg: Option[String] = None) =
-      complete(base.PUT / id / "merge" << compact(render(("commit_message" -> msg))))
-
-    def comments = new PullComments
+      complete(base.PUT / id / "merge" << json.str(("commit_message" -> msg)))
   }
 
   /** Builder for creating a new pull request */
@@ -169,17 +166,14 @@ trait RepoPulls
     def body(b: String) = copy(_body = Some(b))
     def base(b: String) = copy(_base = b)
     override def apply[T](handler: Client.Handler[T]) =
-      request(RepoPulls.this.base.POST << pmap)(handler)
-    def pmap =
-      compact(render(
-        ("title" -> title) ~
-        ("body" -> _body) ~
-        ("base" -> _base) ~
-        ("head" -> head) ~
-        ("issue" -> _issue)))
+      request(RepoPulls.this.base.POST
+              << json.str(
+                ("title" -> title) ~
+                ("body" -> _body) ~
+                ("base" -> _base) ~
+                ("head" -> head) ~
+                ("issue" -> _issue)))(handler)      
   }
-
-  def pulls = new Pulls
 
   def pull(id: Int): Pull = Pull(id)
 }

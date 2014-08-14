@@ -84,4 +84,4 @@ You can find a list of notable changes on [implicit.ly](http://notes.implicit.ly
 - Github [api docs](http://developer.github.com/)
 - Your Github [oauth clients](https://github.com/settings/applications)
 
-Doug Tangren (softprops) 2012
+Doug Tangren (softprops) 2012-2014
