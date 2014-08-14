@@ -58,6 +58,7 @@ trait Repositories { self: Requests =>
 
   protected [this]
   class UserRequests(user: String) {
+    /** https://developer.github.com/v3/users/#get-a-single-user */
     def info[T](handler: Client.Handler[T]) =
       request(apiHost / "users" / user)(handler)
 
