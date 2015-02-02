@@ -1,23 +1,29 @@
 package hubcat
 
 import com.ning.http.client.Response
+import org.json4s.JsonDSL._
+import org.json4s.native.Printer.compact
+import org.json4s.native.JsonMethods.render
 
 // application/json
 //application/vnd.github.VERSION.raw
 trait Git { self: RepoRequests =>
-  case class TreeQueryBuilder(sha: String, recur: Option[Int] = None)
-     extends Client.Completion[Response] {
+  case class TreeQueryBuilder(
+    sha: String, recur: Option[Int] = None)
+    extends Client.Completion[Response] {
 
     def recursive = copy(recur = Some(1))
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(apiHost / "repos" / user / repo / "git" / "trees" / sha <<? pmap)(handler)
-    private def pmap = Map.empty[String, String] ++ recur.map("recusive" -> _.toString)
+      request(apiHost / "repos" / user / repo / "git" / "trees" / sha <<? query)(handler)
+
+    private def query = Map.empty[String, String] ++ recur.map("recusive" -> _.toString)
   }
 
   /** http://developer.github.com/v3/git/blobs/ */
-  case class BlobQueryBuilder(sha: String, rawval: Boolean = false)
-     extends Client.Completion[Response] {
+  case class BlobQueryBuilder(
+    sha: String, rawval: Boolean = false)
+    extends Client.Completion[Response] {
    
     def raw = copy(rawval = true)
 
@@ -33,51 +39,48 @@ trait Git { self: RepoRequests =>
     BlobQueryBuilder(sha)
 
   def newBlob(content: String, encoding: String = "utf-8") =
-    complete(apiHost.POST / "repos" / user / repo / "git" / "blobs" << {
-      import org.json4s.JsonDSL._
-      import org.json4s.native.Printer.compact
-      import org.json4s.native.JsonMethods.render
+    complete[Response](apiHost.POST / "repos" / user / repo / "git" / "blobs" << {
       compact(render(("content" -> content) ~ ("encoding" -> encoding)))
     })
 
   // commits
   def commit(sha: String) =
-    complete(apiHost / "repos" / user / repo / "git" / "commits" / sha)
+    complete[Response](apiHost / "repos" / user / repo / "git" / "commits" / sha)
 
   // http://developer.github.com/v3/git/commits/#create-a-commit
 
   def newCommit(message: String, tree: String, parents: Traversable[String]) =
-    complete(apiHost.POST / "repos" / user / repo / "git" / "commits")
+    complete[Response](apiHost.POST / "repos" / user / repo / "git" / "commits")
 
 
   // refs
 
   def ref(id: String) =
-    complete(apiHost.POST / "repos" / user / repo / "git" / "refs" / id)
+    complete[Response](apiHost.POST / "repos" / user / repo / "git" / "refs" / id)
 
   def refs(namespace: Option[String] = None) =
-    complete(apiHost.POST / "repos" / user / repo / "git" / "refs")
+    complete[Response](apiHost.POST / "repos" / user / repo / "git" / "refs")
     
   def newRef(ref: String, sha: String) =
-    complete(apiHost.POST / "repos" / user / repo / "git" / "refs")
+    complete[Response](apiHost.POST / "repos" / user / repo / "git" / "refs")
 
   def reref(id: String, sha: String, force: Boolean = false) =
-    complete(apiHost.PATCH / "repos" / user / repo / "git" / "refs" / id)
+    complete[Response](apiHost.PATCH / "repos" / user / repo / "git" / "refs" / id)
 
   def deref(id: String) =
-    complete(apiHost.DELETE / "repos" / user / repo / "git" / "refs" / id)
+    complete[Response](apiHost.DELETE / "repos" / user / repo / "git" / "refs" / id)
 
   // tags
 
   def tag(sha: String) =
-    complete(apiHost / "repos" / user / repo / "git" / "tags" / sha)
+    complete[Response](apiHost / "repos" / user / repo / "git" / "tags" / sha)
 
   def newTag(tag: String, msg: String, obj: String, tpe: String) =
-    complete(apiHost.POST / "repos" / user / repo / "git" / "tags")
+    complete[Response](apiHost.POST / "repos" / user / repo / "git" / "tags")
 
   def tree(sha: String, recursive: Boolean = false) =
     TreeQueryBuilder(sha)
 
   def newTree(sha: String, basetree: Option[String] = None, tree: Traversable[String]) =
-    complete(apiHost.POST / "repos" / user / repo / "git" / "trees" / sha)
+    complete[Response](apiHost.POST / "repos" / user / repo / "git" / "trees" / sha)
 }

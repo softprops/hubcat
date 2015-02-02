@@ -1,36 +1,36 @@
 package hubcat
 
-import com.ning.http.client.Response
 import org.json4s.JsonDSL._
 
+/** Interfaces for issuing requests to create and access authorizations */
 trait Authorizations { self: Requests =>
-  /** Builder for new authorizations */
+
+  /** Builder interface for new authorizations */
   protected [this]
   case class AuthorizationBuilder(
     _scopes: Option[Seq[String]]      = None,
     _note: Option[String]             = None,
     _url: Option[String]              = None, 
     _client: Option[(String, String)] = None)
-    extends Client.Completion[Response] {
+    extends Client.Completion[Authorization] {
 
     def scopes(s: String*) = copy(_scopes = Some(s))
     def note(n: String) = copy(_note = Some(n))
     def url(u: String) = copy(_url = Some(u))
-    def client(id: String, secret: String) = copy(_client = Some((id, secret)))
+    def client(id: String, secret: String) = copy(
+      _client = Some((id, secret))
+    )
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(apiHost.POST / "authorizations" << pjson)(handler)
+      request(apiHost.POST / "authorizations"
+              << body)(handler)
 
-    private def pjson = {
-      val base = 
-        ("scopes" -> _scopes.map(_.toList).getOrElse(Nil)) ~
-        ("note" -> _note) ~
-        ("note_url" -> _url)
-      val js = _client.map {
-        case (id, sec) => base ~ ("client_id" -> id) ~ ("client_secret" -> sec)
-      }.getOrElse(base)
-      json.str(js)
-    }
+    def body = json.str(
+      ("scopes"        -> _scopes.map(_.toList).getOrElse(Nil)) ~
+      ("note"          -> _note) ~
+      ("note_url"      -> _url) ~
+      ("client_id"     -> _client.map(_._1)) ~
+      ("client_secret" -> _client.map(_._2)))
   }
 
   /** Builder for updating existing authorizations */
@@ -41,7 +41,7 @@ trait Authorizations { self: Requests =>
     _scopeop: Option[Boolean]    = None,
     _url: Option[String]         = None,
     _note: Option[String]        = None)
-    extends Client.Completion[Response] {
+    extends Client.Completion[Authorization] {
 
     def note(n: String) = copy(_note = Some(n))
     def url(u: String) = copy(_url = Some(u))
@@ -53,30 +53,26 @@ trait Authorizations { self: Requests =>
       copy(_scopes = Some(sx), _scopeop = None)
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(apiHost.POST / "authorizations" / id << pjson)(handler)
-
-    private def pjson = {
-      val note =
-        ("note" -> _note) ~
-        ("note_url" -> _url)
-      val js = _scopeop.map {
-        op =>
-          val scps = if (op) ("add_scopes" -> _scopes.map(_.toList))
+      request(apiHost.POST / "authorizations" / id
+              << body)(handler)
+    def body = json.str(
+      ("note"     -> _note) ~
+      ("note_url" -> _url) ~
+      (_scopeop match {
+        case Some(op) =>
+          if (op) ("add_scopes" -> _scopes.map(_.toList))
           else ("remove_scopes" -> _scopes.map(_.toList))
-          note ~ scps
-      }.getOrElse(note ~ ("scopes" -> _scopes.map(_.toList)))
-
-      json.str(js)
-    } 
+            case _ => ("scopes" -> _scopes.map(_.toList))
+      }))
   }
 
   /** fetch authorizations (http://developer.github.com/v3/oauth/#list-your-authorizations) */
   def authorizations =
-    complete(apiHost / "authorizations")
+    complete[List[Authorization]](apiHost / "authorizations")
 
   /** fetch one authorization (http://developer.github.com/v3/oauth/#get-a-single-authorization) */
   def authorization(id: Int) =
-    complete(apiHost / "authorizations" / id.toString)
+    complete[Authorization](apiHost / "authorizations" / id.toString)
 
   /** create a new authorization (http://developer.github.com/v3/oauth/#create-a-new-authorization) */
   def authorize =
@@ -88,5 +84,5 @@ trait Authorizations { self: Requests =>
 
   /** undo an authorization (http://developer.github.com/v3/oauth/#delete-an-authorization) */
   def deauthorize(id: Int) =
-    complete(apiHost.DELETE / "authorizations" / id.toString)
+    complete[Unit](apiHost.DELETE / "authorizations" / id.toString)
 }

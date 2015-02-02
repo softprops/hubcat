@@ -27,10 +27,11 @@ trait RepoStatuses { self: RepoRequests =>
       def targetUrl(target: String) = copy(_targetUrl = Some(target))
       def desc(d: String) = copy(_desc = Some(d))
       override def apply[T](handler: Client.Handler[T]) =
-        request(base.POST << json.str(
-          ("state" -> state.value) ~
-          ("target_url" -> _targetUrl) ~
-          ("description" -> _desc)))(handler)
+        request(base.POST << body)(handler)
+      def body = json.str(
+        ("state" -> state.value) ~
+        ("target_url" -> _targetUrl) ~
+        ("description" -> _desc))
     }
 
     /** http://developer.github.com/v3/repos/statuses/#list-statuses-for-a-specific-ref */

@@ -1,10 +1,10 @@
 package hubcat
 
-import com.ning.http.client.Response
+import org.json4s.JNothing
 import org.json4s.JsonDSL._
 
 trait RepoHooks { self: RepoRequests =>
-  object Hooks extends Client.Completion[Response] {
+  object Hooks extends Client.Completion[List[hubcat.Hook]] {
     private [this] def base =
       apiHost / "repos" / user / repo / "hooks"
 
@@ -17,7 +17,7 @@ trait RepoHooks { self: RepoRequests =>
       _active: Option[Boolean]  = None,
       _addevents: List[String]  = Nil,
       _rmevents: List[String]   = Nil)
-      extends Client.Completion[Response] {
+      extends Client.Completion[hubcat.Hook] {
 
       def config(props: (String, Any)*) =
         copy(_config = props.toMap)
@@ -41,19 +41,28 @@ trait RepoHooks { self: RepoRequests =>
         copy(_active = Some(is))
 
       override def apply[T](hand: Client.Handler[T]) =
-        request(_id.map(base.PATCH / _).getOrElse(base.POST) << pmap)(hand)
+        request(_id.map(base.PATCH / _).getOrElse(base.POST)
+                << body)(hand)
 
-      private def pmap = {
-        val js =
-          ("name" -> name) ~
-          ("events" -> _events) ~
-          ("active" -> _active)
-        val confd = if (_config.isEmpty) js else js ~ ("config" -> _config.map {
-          case (k, v) => (k -> v.toString)
-        })
-        json.str(if (_id.isDefined) confd ~ ("add_events" -> _addevents) ~ ("remove_events" -> _rmevents)
-                       else confd)
-      }
+        /*(_config match {
+          case cfg if cfg.nonEmpty =>
+            ("config" -> cfg.map {
+              case (k, v) => (k, v.toString)
+            }.toMap)
+          case _ => ("x" -> JNothing)
+        }) ~*/
+
+    def body = json.str(
+        ("name"   -> name) ~
+        ("events" -> _events) ~
+        ("active" -> _active)) /*~
+        (_id match {
+          case Some(_) =>
+            ("add_events"    -> _addevents) ~
+            ("remove_events" -> _rmevents)
+          case _ =>
+            ("x" -> JNothing)
+        }))*/
     }
 
     /** http://developer.github.com/v3/repos/hooks/#list */
@@ -62,7 +71,7 @@ trait RepoHooks { self: RepoRequests =>
 
     /** http://developer.github.com/v3/repos/hooks/#get-single-hook */
     def apply(id: String) =
-      complete(base / id)
+      complete[hubcat.Hook](base / id)
 
     /** http://developer.github.com/v3/repos/hooks/#create-a-hook */
     def create(name: String) =
@@ -74,10 +83,10 @@ trait RepoHooks { self: RepoRequests =>
 
     /** http://developer.github.com/v3/repos/hooks/#test-a-hook */
     def test(id: String) =
-      complete(base.POST / id / "tests")
+      complete[Unit](base.POST / id / "tests")
 
     /** http://developer.github.com/v3/repos/hooks/#delete-a-hook */
     def delete(id: String) =
-      complete(base.DELETE / id)
+      complete[Unit](base.DELETE / id)
   }
 }

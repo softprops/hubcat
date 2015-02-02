@@ -15,13 +15,13 @@ import org.json4s.JsonDSL._
 trait Issues { self: Requests =>
   
   def issues = // not found?
-    complete(apiHost / "issues")
+    complete[Response](apiHost / "issues")
 
   def userissues =
-    complete(apiHost / "user" / "issues")
+    complete[Response](apiHost / "user" / "issues")
 
   def orgissues(org: String) =
-    complete(apiHost / "orgs" / org / "issues")
+    complete[Response](apiHost / "orgs" / org / "issues")
 }
 
 // cli.repo(user, repo).issues.since(time)...
@@ -41,9 +41,9 @@ trait RepoIssues { self: RepoRequests  =>
     _creator: Option[String]   = None,
     _mentioned: Option[String] = None,
     _labels: Option[Traversable[String]] = None,
-    _sort: String = "created",
-    _order: String = "desc",
-    _since: Option[String] = None,
+    _sort: String              = "created",
+    _order: String             = "desc",
+    _since: Option[String]     = None,
     _accept: String = Accept.GithubJson)
     extends Client.Completion[Response] {
 
@@ -53,11 +53,11 @@ trait RepoIssues { self: RepoRequests  =>
     
     /** http://developer.github.com/v3/issues/assignees/#list-assignees */
     def assignees =
-      complete(apiHost  / "repos" / user / repo / "assignees")
+      complete[Response](apiHost  / "repos" / user / repo / "assignees")
 
     /** http://developer.github.com/v3/issues/assignees/#check-assignee */
     def assigned(assignee: String) =
-      complete(apiHost / "repos" / user / repo / "assignees" / assignee)
+      complete[Response](apiHost / "repos" / user / repo / "assignees" / assignee)
 
     def accepting = new {
       def raw = copy(_accept = Accept.RawJson)
@@ -106,9 +106,9 @@ trait RepoIssues { self: RepoRequests  =>
     def since(d: Date) = copy(_since = Some(ISO8601(d)))
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(apiHost / "repos" / user / repo / "issues" <<? pmap <:< Map("Accept" -> _accept))(handler)
+      request(apiHost / "repos" / user / repo / "issues" <<? query <:< Map("Accept" -> _accept))(handler)
 
-    private def pmap =
+    private def query =
       Map("milestone" -> _milestone,
           "state"     -> _state,
           "sort"      -> _sort,
@@ -124,29 +124,37 @@ trait RepoIssues { self: RepoRequests  =>
   case class RepoIssueBuilder(
     user: String,
     repo: String,
-    _id: Option[Int] = None,
-    _title: Option[String] = None,
-    _body: Option[String] = None,
-    _assignee: Option[String] = None,
-    _milestone: Option[Int] = None,
+    _id: Option[Int]             = None,
+    _title: Option[String]       = None,
+    _body: Option[String]        = None,
+    _assignee: Option[String]    = None,
+    _milestone: Option[Int]      = None,
     _labels: Option[Seq[String]] = None,
-    _state: Option[String] = None)
+    _state: Option[String]       = None)
      extends Client.Completion[Response] {
 
     def title(t: String) = copy(_title = Some(t))
+
     def body(b: String) = copy(_body = Some(b))
+
     def assignee(a: String) = copy(_assignee = Some(a))
+
     def milestone(m: Int) = copy(_milestone = Some(m))
+
     def labels(ls: Seq[String]) = copy(_labels = Some(ls))
+
     def close = copy(_state = Some("close"))
+
     def open = copy(_state = Some("open"))
 
     override def apply[T](handler: Client.Handler[T]) =
-      request(_id.map(apiHost.PATCH / "repos" / user / repo / "issues" / _.toString).getOrElse(
-        apiHost.POST / "repos" / user / repo / "issues"
-      ) << pjson)(handler)
+      request(
+        _id.fold
+        (apiHost.POST / "repos" / user / repo / "issues")
+        (apiHost.PATCH / "repos" / user / repo / "issues" / _.toString)
+        << payload)(handler)
 
-    private def pjson =
+    def payload =
       json.str(
         ("title" -> _title) ~
         ("body" -> _body) ~
@@ -161,23 +169,23 @@ trait RepoIssues { self: RepoRequests  =>
   object Milestones {
     /** http://developer.github.com/v3/issues/milestones/#list-milestones-for-a-repository */
     def find =
-      complete(apiHost / "repo" / user / repo / "milestones")
+      complete[Response](apiHost / "repo" / user / repo / "milestones")
 
     /** http://developer.github.com/v3/issues/milestones/#get-a-single-milestone */
     def get(num: String) =
-      complete(apiHost / "repo" / user / repo / "milestones" / num)
+      complete[Response](apiHost / "repo" / user / repo / "milestones" / num)
 
     /** http://developer.github.com/v3/issues/milestones/#update-a-milestone */
     def edit(num: String) =
-      complete(apiHost.PATCH / "repo" / user / repo / "milestones" / num)
+      complete[Response](apiHost.PATCH / "repo" / user / repo / "milestones" / num)
 
     /** http://developer.github.com/v3/issues/milestones/#delete-a-milestone */
     def delete(num: String) =
-      complete(apiHost.DELETE / "repo" / user / repo / "milestones" / num)
+      complete[Response](apiHost.DELETE / "repo" / user / repo / "milestones" / num)
 
     /** http://developer.github.com/v3/issues/milestones/#create-a-milestone TODO impl this!*/
     def create(num: String) =
-      complete(apiHost.POST / "repo" / user / repo / "milestones")
+      complete[Response](apiHost.POST / "repo" / user / repo / "milestones")
   }
 
   /** Requests for accessing and creating repo labels */
@@ -189,33 +197,34 @@ trait RepoIssues { self: RepoRequests  =>
 
     /** http://developer.github.com/v3/issues/labels/#get-a-single-label */
     def get(name: String) =
-      complete(apiHost / "repos" / user / repo / "labels" / name)
+      complete[Response](apiHost / "repos" / user / repo / "labels" / name)
 
    /** http://developer.github.com/v3/issues/labels/#create-a-label */
    def create(name: String, color: String) = {
-     val js =
+     val payload = json.str(
        ("name" -> name) ~
-       ("color" -> color)
-     complete(apiHost.POST / "repos" / user / repo / "labels" << json.str(js))
+       ("color" -> color))
+     complete[Response](apiHost.POST / "repos" / user / repo / "labels" << payload)
    }
 
    /** http://developer.github.com/v3/issues/labels/#update-a-label */
    def edit(name: String, color: String) = {
-     val js =
+     val payload = json.str(
        ("name" -> name) ~
-       ("color" -> color)
-     complete(apiHost.PATCH / "repos" / user / repo / "labels" << json.str(js))
+       ("color" -> color))
+     complete[Response](apiHost.PATCH / "repos" / user / repo / "labels" << payload)
    }
 
    /** http://developer.github.com/v3/issues/labels/#delete-a-label */
    def delete(name: String) =
-     complete(apiHost.DELETE / "repos" / user / repo / "labels" / name)
+     complete[Response](apiHost.DELETE / "repos" / user / repo / "labels" / name)
   }
 
   /** Requests for a specific Github issue */
   protected [this]
-  case class Issue(id: Int, _accept: String = Accept.GithubJson)
-     extends Client.Completion[Response] {
+  case class Issue(
+    id: Int, _accept: String = Accept.GithubJson)
+    extends Client.Completion[Response] {
 
     def accepting = new {
       def raw = copy(_accept = Accept.RawJson)
@@ -225,18 +234,18 @@ trait RepoIssues { self: RepoRequests  =>
     }
 
     def labels =
-      complete(apiHost / "repos" / user  / repo / "issues" / id.toString / "labels")
+      complete[Response](apiHost / "repos" / user  / repo / "issues" / id.toString / "labels")
 
     /** http://developer.github.com/v3/issues/labels/#add-labels-to-an-issue */
     def label(labs: String*) = {
-      val js = jlabs(labs.toList)
-      complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "labels" << json.str(js))
+      val payload = json.str(jlabs(labs.toList))
+      complete[Response](apiHost.POST / "repos" / user / repo / "issues" / id.toString / "labels" << payload)
     }
 
     /** http://developer.github.com/v3/issues/labels/#replace-all-labels-for-an-issue */
     def relabel(labs: String*) = {
-      val js = jlabs(labs.toList)
-      complete(apiHost.PATCH / "repos" / user / repo / "issues" / id.toString / "labels" << json.str(js))
+      val payload = json.str(jlabs(labs.toList))
+      complete[Response](apiHost.PATCH / "repos" / user / repo / "issues" / id.toString / "labels" << payload)
     }
 
     private def jlabs(labs: List[String]) =
@@ -244,11 +253,11 @@ trait RepoIssues { self: RepoRequests  =>
 
     /** http://developer.github.com/v3/issues/labels/#remove-all-labels-from-an-issue */
     def delabel = 
-      complete(apiHost.DELETE / "repos" / user / repo / "issues" / id.toString / "labels")
+      complete[Response](apiHost.DELETE / "repos" / user / repo / "issues" / id.toString / "labels")
 
     /** http://developer.github.com/v3/issues/labels/#remove-a-label-from-an-issue */
     def delabel(name: String) =
-      complete(apiHost.DELETE / "repos" / user / repo / "issues" / id.toString / "labels" / name)
+      complete[Response](apiHost.DELETE / "repos" / user / repo / "issues" / id.toString / "labels" / name)
 
      /** http://developer.github.com/v3/issues/#get-a-single-issue */
     override def apply[T](hand: Client.Handler[T]) =
@@ -261,16 +270,20 @@ trait RepoIssues { self: RepoRequests  =>
     protected [this]
     object Comments extends Client.Completion[Response] {
       def get(cid: Int) =
-        complete(apiHost / "repos" / user / repo / "issues" / id.toString / "comments" / cid.toString)
+        complete[Response](apiHost / "repos" / user / repo / "issues" / id.toString / "comments" / cid.toString)
 
-      def create(body: String) =
-        complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "comments" << json.str(("body" -> body)))
+      def create(body: String) = {
+        val payload = json.str(("body" -> body))
+        complete[Response](apiHost.POST / "repos" / user / repo / "issues" / id.toString / "comments" << payload)
+      }
 
-      def edit(cid: Int, body: String) =
-        complete(apiHost.PATCH / "repos" / user / repo / "issues" / "comments" / cid.toString << json.str(("body" -> body)))
+      def edit(cid: Int, body: String) = {
+        val payload = json.str(("body" -> body))
+        complete[Response](apiHost.PATCH / "repos" / user / repo / "issues" / "comments" / cid.toString << payload)
+      }
 
       def delete(cid: Int) =
-        complete(apiHost.DELETE / "repos" / user / repo / "issues" / "comments" / cid.toString)
+        complete[Response](apiHost.DELETE / "repos" / user / repo / "issues" / "comments" / cid.toString)
 
       def apply[T](hand: Client.Handler[T]) =
         request(apiHost / "repos" / user / repo / "issues" / id.toString / "comments")(hand)

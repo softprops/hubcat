@@ -8,7 +8,7 @@ trait RepoPulls
   private def base =
     apiHost / "repos" / user / repo / "pulls"
 
-  object pulls extends Client.Completion[Response] {
+  object pulls extends Client.Completion[List[PullReq]] {
 
     object comments
       extends Client.Completion[Response] {
@@ -16,7 +16,7 @@ trait RepoPulls
         apiHost / "repos" / user / repo / "pulls" / "comments"
 
       case class Filter(
-        _sort: Option[String]     = None,
+        _sort: Option[String]      = None,
         _direction: Option[String] = None)
         extends Client.Completion[Response] {
         /** http://developer.github.com/v3/pulls/comments/#list-comments-on-a-pull-request */
@@ -32,10 +32,13 @@ trait RepoPulls
           request(base  / id)(handler)
 
         /** http://developer.github.com/v3/pulls/comments/#edit-a-comment */
-        def edit(body: String) = complete(base.POST / id << json.str(("body" -> body)))
+        def edit(body: String) = {
+          val payload = json.str(("body" -> body))
+          complete[Response](base.POST / id << payload)
+        }
 
         /** http://developer.github.com/v3/pulls/comments/#delete-a-comment */
-        def delete = complete(base.DELETE / id)
+        def delete = complete[Response](base.DELETE / id)
       }
 
       override def apply[T](handler: Client.Handler[T]) =
@@ -84,7 +87,7 @@ trait RepoPulls
   case class Pull(
     id: Int,
     _accept: String = Accept.GithubJson)
-    extends Client.Completion[Response] {
+    extends Client.Completion[PullReq] {
 
     private def acceptHeader = Map("Accept" -> _accept)
 
@@ -96,17 +99,21 @@ trait RepoPulls
         request(base)(handler)
 
       /** Starts a new thread of review. http://developer.github.com/v3/pulls/comments/#create-a-comment */
-      def create(body: String, commit: String, path: String, position: Int) =
-        complete(base.POST << json.str(
+      def create(body: String, commit: String, path: String, position: Int) = {
+        val payload = json.str(
           ("body" -> body) ~
           ("commit_id" -> commit) ~
           ("path" -> path) ~
-          ("position" -> position)))
+          ("position" -> position))
+        complete[Response](base.POST << payload)
+      }
 
       /** Creates a response in reply to a thread of review. http://developer.github.com/v3/pulls/comments/#create-a-comment */
-      def reply(to: Int, body: String) =
-        complete(base.POST << json.str(
-          ("body" -> body) ~ ("in_reply_to" -> to)))
+      def reply(to: Int, body: String) = {
+        val payload = json.str(
+          ("body" -> body) ~ ("in_reply_to" -> to))
+        complete[Response](base.POST << payload)
+      }
     }
 
     /** Update operation fields */
@@ -114,15 +121,16 @@ trait RepoPulls
       _title: Option[String] = None,
       _body: Option[String] = None,
       _state: Option[String] = None)
-      extends Client.Completion[Response] {
+      extends Client.Completion[PullReq] {
       def title(t: String) = copy(_title = Some(t))
       def body(b: String) = copy(_body = Some(b))
       def state(s: String) = copy(_state = Some(s))
       override def apply[T](handler: Client.Handler[T]) =
-        request(base.PATCH / id << json.str(
-          ("title" -> _title) ~
-          ("body"  -> _body) ~
-          ("state" -> _state)))(handler)
+        request(base.PATCH / id << body)(handler)
+     def body = json.str(
+       ("title" -> _title) ~
+       ("body"  -> _body) ~
+       ("state" -> _state))
     }
 
     def accepting = new {
@@ -142,17 +150,19 @@ trait RepoPulls
     def update = Update()
 
     /** http://developer.github.com/v3/pulls/#list-commits-on-a-pull-request */
-    def commits = complete(base / id / "commits" <:< acceptHeader)
+    def commits = complete[Response](base / id / "commits" <:< acceptHeader)
 
     /** http://developer.github.com/v3/pulls/#list-pull-requests-files */
-    def files = complete(base / id / "files" <:< acceptHeader)
+    def files = complete[Response](base / id / "files" <:< acceptHeader)
 
     /** http://developer.github.com/v3/pulls/#get-if-a-pull-request-has-been-merged */
-    def merged = complete(base / id / "merge")
+    def merged = complete[Unit](base / id / "merge")
 
     /** http://developer.github.com/v3/pulls/#merge-a-pull-request-merge-buttontrade */
-    def merge(msg: Option[String] = None) =
-      complete(base.PUT / id / "merge" << json.str(("commit_message" -> msg)))
+    def merge(msg: Option[String] = None) = {
+      val body = json.str(("commit_message" -> msg))
+      complete[MergeResult](base.PUT / id / "merge" << body)
+    }
   }
 
   /** Builder for creating a new pull request */
@@ -162,17 +172,18 @@ trait RepoPulls
     _base: String         = "master",
     _body: Option[String] = None,
     _issue: Option[Int]   = None)
-    extends Client.Completion[Response] {
+    extends Client.Completion[PullReq] {
     def body(b: String) = copy(_body = Some(b))
     def base(b: String) = copy(_base = b)
     override def apply[T](handler: Client.Handler[T]) =
       request(RepoPulls.this.base.POST
-              << json.str(
-                ("title" -> title) ~
-                ("body" -> _body) ~
-                ("base" -> _base) ~
-                ("head" -> head) ~
-                ("issue" -> _issue)))(handler)      
+              << body)(handler)
+    def body = json.str(
+      ("title" -> title) ~
+      ("body" -> _body) ~
+      ("base" -> _base) ~
+      ("head" -> head) ~
+      ("issue" -> _issue))
   }
 
   def pull(id: Int): Pull = Pull(id)

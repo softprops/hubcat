@@ -25,37 +25,51 @@ trait Repositories { self: Requests =>
     _hasWiki: Boolean               = true,
     _hasDownloads: Boolean          = true,
     _autoinit: Boolean              = false,
-    _ignoreTemplate: Option[String] = None)
+    _ignoreTemplate: Option[String] = None,
+    _licenseTemplate: Option[String] = None)
     extends Client.Completion[Response] {
 
     def desc(d: String) = copy(_desc = Some(d))
+
     def homepage(h: String) = copy(_homepage = Some(h))
+
     def issues(b: Boolean) = copy(_hasIssues = b)
+
     def wiki(b: Boolean) = copy(_hasWiki = b)
+
     def downloads(b: Boolean) = copy(_hasDownloads = b)
+
     def team(id: Int) = copy(_teamId = Some(id))
+
     def autoInit(a: Boolean) = copy(_autoinit = a)
+
     def gitignoreTemplate(t: String) = copy(_ignoreTemplate = Some(t))
+
+    def licenseTemplate(t: String) = copy(_licenseTemplate = Some(t))
+
     def underOrganization(o: String) = copy(_org = Some(o))
+
     override def apply[T](handler: Client.Handler[T]) =
       request(
-        _org.map(o => apiHost.POST / "orgs" / o / "repos")
-            .getOrElse(apiHost.POST / "user" / "repos")
-        << json.str(
-          ("name"          -> name) ~
-          ("description"   -> _desc) ~
-          ("homepage"      -> _homepage) ~
-          ("has_issues"    -> _hasIssues) ~
-          ("has_wiki"      -> _hasWiki) ~
-          ("has_downloads" -> _hasDownloads) ~
-          ("team_id"       -> _teamId) ~
-          ("auto_init"     -> _autoinit) ~
-          ("gitignore_template" -> _ignoreTemplate)))(handler)
-      
+        _org.fold(apiHost.POST / "user" / "repos")(o => apiHost.POST / "orgs" / o / "repos")
+        << body)(handler)
+
+    def body = json.str(
+      ("name"          -> name) ~
+      ("description"   -> _desc) ~
+      ("homepage"      -> _homepage) ~
+      ("has_issues"    -> _hasIssues) ~
+      ("has_wiki"      -> _hasWiki) ~
+      ("has_downloads" -> _hasDownloads) ~
+      ("team_id"       -> _teamId) ~
+      ("auto_init"     -> _autoinit) ~
+      ("gitignore_template" -> _ignoreTemplate) ~
+      ("license_template"   -> _licenseTemplate))
   }
 
   protected [this]
   class UserRequests(user: String) {
+    // todo type,sort,direction params
     /** http://developer.github.com/v3/repos/#list-user-repositories */
     def repos =
       RepoFilter(apiHost / "users" / user / "repos")
@@ -71,7 +85,7 @@ trait Repositories { self: Requests =>
     _typ: String         = "all",
     _sort: String        = "full_name",
     _dir: Option[String] = None)
-     extends Client.Completion[Response] {
+     extends Client.Completion[List[Repo]] {
 
     // type
 
@@ -128,7 +142,7 @@ trait Repositories { self: Requests =>
   case class OrganizationRepoRequests(org: String) {
      case class RepoFilter(
        _type: Option[String] = None)
-       extends Client.Completion[Response] {
+       extends Client.Completion[List[Repo]] {
        def forks = copy(_type = Some("forks"))
        def sources = copy(_type = Some("sources"))
        override def apply[T](handler: Client.Handler[T]) =
@@ -173,8 +187,8 @@ class RepoRequests(
      (handler: Client.Handler[T]): Future[T] =
       requests.request(req)(handler)
 
-    def complete(req: Req): Client.Completion[Response] =
-      requests.complete(req)
+    def complete[A: Rep](req: Req): Client.Completion[A] =
+      requests.complete[A](req)
 
     def apiHost =
       requests.apiHost
@@ -185,38 +199,38 @@ class RepoRequests(
 
     /** http://developer.github.com/v3/repos/#edit */
     def edit =
-      complete(apiHost.PATCH / "repos" / user / repo)
+      complete[Response](apiHost.PATCH / "repos" / user / repo)
 
     /** http://developer.github.com/v3/repos/#delete-a-repository */
     def delete =
-      complete(apiHost.DELETE / "repos" / user / repo)
+      complete[Response](apiHost.DELETE / "repos" / user / repo)
 
     /** http://developer.github.com/v3/repos/#list-contributors */
     def contributors =
-      complete(apiHost / "repos" / user / repo / "contributors")
+      complete[Response](apiHost / "repos" / user / repo / "contributors")
 
     /** http://developer.github.com/v3/repos/#list-languages */
     def languages =
-      complete(apiHost / "repos" / user / repo / "languages")
+      complete[Response](apiHost / "repos" / user / repo / "languages")
 
     /** http://developer.github.com/v3/repos/#list-languages */
     def teams =
-      complete(apiHost / "repos" / user / repo / "teams")
+      complete[Response](apiHost / "repos" / user / repo / "teams")
 
     /** http://developer.github.com/v3/repos/#list-tags */
     def tags =
-      complete(apiHost / "repos" / user / repo / "tags")
+      complete[Response](apiHost / "repos" / user / repo / "tags")
 
     /** http://developer.github.com/v3/repos/#list-branches */
     def branches =
-      complete(apiHost / "repos" / user / repo / "branches")
+      complete[Response](apiHost / "repos" / user / repo / "branches")
 
     /** http://developer.github.com/v3/repos/#get-branches */
     def branch(br: String) =
-      complete(apiHost / "repos" / user / repo / "branches" / br)
+      complete[Response](apiHost / "repos" / user / repo / "branches" / br)
 
     def debranch(br: String) =
-      complete(apiHost.DELETE / "repos" / user / repo / "branches" / br)
+      complete[Response](apiHost.DELETE / "repos" / user / repo / "branches" / br)
 
     /** http://developer.github.com/v3/repos/hooks/#pubsubhubbub */
     protected [this]
@@ -233,10 +247,9 @@ class RepoRequests(
       // provided in request body. escaping issue?
       override def apply[T](hand: Client.Handler[T]) =
         request(base.POST <<? Map(
-        "hub.mode" -> mode,
+        "hub.mode"     -> mode,
         "hub.callback" -> callback,
-        "hub.topic" -> "https://github.com/%s/%s/events/%s"
-                        .format(user, repo, event)
+        "hub.topic"    -> s"https://github.com/$user/$repo/events/$event"
         ) ++
         _secret.map("hub.secret" -> _))(hand)
     }

@@ -1,6 +1,5 @@
 package hubcat
 
-import com.ning.http.client.Response
 import org.json4s.JsonDSL._
 
 trait Markdown { self: Requests =>
@@ -8,7 +7,7 @@ trait Markdown { self: Requests =>
     text: String,
     _mode: Option[String]    = None,
     _context: Option[String] = None)
-     extends Client.Completion[Response] {
+     extends Client.Completion[String] {
 
     def context(user: String, repo: String) =
       copy(_context = Some(s"$user/$repo"))
@@ -19,10 +18,12 @@ trait Markdown { self: Requests =>
 
     override def apply[T](handler: Client.Handler[T]) =
       request(apiHost.POST / "markdown"
-              << json.str(
-                ("text" -> text) ~
-                ("mode" -> _mode) ~
-                ("context" -> _context)))(handler)      
+              << body)(handler)
+
+    def body = json.str(
+      ("text" -> text) ~
+      ("mode" -> _mode) ~
+      ("context" -> _context))
   }
 
   def markdown(text: String) = MarkdownBuilder(text)

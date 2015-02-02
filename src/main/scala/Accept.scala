@@ -1,5 +1,7 @@
 package hubcat
 
+
+// todo: make this a type
 object Accept {
   val GithubJson = "application/vnd.github+json"
   val Raw = "application/vnd.github.beta.raw"
