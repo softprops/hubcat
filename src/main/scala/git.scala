@@ -74,7 +74,7 @@ trait Git { self: RepoRequests =>
 
   /** https://developer.github.com/v3/repos/commits/#list-commits-on-a-repository */
   def commits =
-    CommitsFilter(apiHost / "repos" / user / repo / "git" / "commits")
+    CommitsFilter(apiHost / "repos" / user / repo / "commits")
 
   // http://developer.github.com/v3/git/commits/#create-a-commit
 
