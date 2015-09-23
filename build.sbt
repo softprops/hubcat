@@ -8,7 +8,7 @@ description := "a vvip client of the github enterprises"
 
 libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.0")
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 // needed for java test options
 fork in Test := true
@@ -26,7 +26,7 @@ if (sys.env.getOrElse("TRAVIS", "false").toBoolean) {
 
 crossScalaVersions := Seq("2.9.3", "2.10.2")
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.11.7"
 
 scalacOptions := Seq(Opts.compile.deprecation)
 
