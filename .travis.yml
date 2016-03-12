@@ -15,3 +15,5 @@ scala:
 - 2.10.1
 - 2.10.0
 - 2.9.3
+script:
+    - sbt ++TRAVIS_SCALA_VERSION test
