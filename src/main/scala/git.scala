@@ -1,5 +1,8 @@
 package hubcat
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import dispatch._
 
 // application/json
@@ -18,7 +21,7 @@ trait Git { self: RepoRequests =>
   /** http://developer.github.com/v3/git/blobs/ */
   case class BlobQueryBuilder(sha: String, rawval: Boolean = false)
      extends Client.Completion {
-   
+
     def raw = copy(rawval = true)
 
     override def apply[T](handler: Client.Handler[T]) = {
@@ -28,7 +31,7 @@ trait Git { self: RepoRequests =>
   }
 
   // blobs
-    
+
   def blob(sha: String) =
     BlobQueryBuilder(sha)
 
@@ -44,6 +47,36 @@ trait Git { self: RepoRequests =>
   def commit(sha: String) =
     complete(apiHost / "repos" / user / repo / "git" / "commits" / sha)
 
+  protected[this]
+  case class CommitsFilter(base: Req,
+                           _sha: Option[String] = None,
+                           _path: Option[String] = None,
+                           _author: Option[String] = None,
+                           _since: Option[LocalDateTime] = None,
+                           _until: Option[LocalDateTime] = None) extends Client.Completion {
+    val dateTimeFormat = DateTimeFormatter.ofPattern("YYYY-MM-DD'T'HH:MM:SSZ")
+
+    def sha(s: String): CommitsFilter = copy(_sha = Some(s))
+    def path(p: String): CommitsFilter = copy(_path = Some(p))
+    def author(a: String): CommitsFilter = copy(_author = Some(a))
+    def since(s: LocalDateTime): CommitsFilter = copy(_since = Some(s))
+    def until(u: LocalDateTime): CommitsFilter = copy(_until = Some(u))
+
+    override def apply[T](handler: Client.Handler[T]): Future[T] = {
+      val params = Map() ++
+        _sha.map("sha" -> _) ++
+        _path.map("path" -> _) ++
+        _author.map("author" -> _) ++
+        _since.map(s => "since" -> dateTimeFormat.format(s)) ++
+        _until.map(u => "until" -> dateTimeFormat.format(u))
+      request(base <<? params)(handler)
+    }
+  }
+
+  /** https://developer.github.com/v3/repos/commits/#list-commits-on-a-repository */
+  def commits =
+    CommitsFilter(apiHost / "repos" / user / repo / "commits")
+
   // http://developer.github.com/v3/git/commits/#create-a-commit
 
   def newCommit(message: String, tree: String, parents: Traversable[String]) =
@@ -57,7 +90,7 @@ trait Git { self: RepoRequests =>
 
   def refs(namespace: Option[String] = None) =
     complete(apiHost.POST / "repos" / user / repo / "git" / "refs")
-    
+
   def newRef(ref: String, sha: String) =
     complete(apiHost.POST / "repos" / user / repo / "git" / "refs")
 
