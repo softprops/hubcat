@@ -266,7 +266,7 @@ trait RepoIssues { self: RepoRequests  =>
     protected [this]
     object Comments extends Client.Completion {
       def get(cid: Int) =
-        complete(apiHost / "repos" / user / repo / "issues" / id.toString / "comments" / cid.toString)
+        complete(apiHost / "repos" / user / repo / "issues" / "comments" / cid.toString)
 
       def create(body: String) =
         complete(apiHost.POST / "repos" / user / repo / "issues" / id.toString / "comments" << compact(render(("body" -> body))))
