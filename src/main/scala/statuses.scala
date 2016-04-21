@@ -31,17 +31,20 @@ trait RepoStatuses { self: RepoRequests =>
     case class StatusBuilder(
       state: Status.State,
       _targetUrl: Option[String] = None,
-      _desc: Option[String] = None)
+      _desc: Option[String] = None,
+      _context: Option[String] = None)
       extends Client.Completion {
       def targetUrl(target: String) = copy(_targetUrl = Some(target))
       def desc(d: String) = copy(_desc = Some(d))
+      def context(c: String) = copy(_context = Some(c))
       override def apply[T](handler: Client.Handler[T]) =
         request(base.POST << pmap)(handler)
 
       private def pmap =
         compact(render(("state" -> state.value) ~
                        ("target_url" -> _targetUrl) ~
-                       ("description" -> _desc)))
+                       ("description" -> _desc) ~
+                       ("context" -> _context)))
     }
 
     /** http://developer.github.com/v3/repos/statuses/#list-statuses-for-a-specific-ref */
