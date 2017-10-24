@@ -11,6 +11,7 @@ env:
       MycmNpq412bqSRckYWPypxSje47Hn3t3sNdznxrxD1azd3Lu/8s=
 language: scala
 scala: 
+- 2.10.2
 - 2.10.1
 - 2.10.0
 - 2.9.3

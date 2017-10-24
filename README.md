@@ -1,12 +1,14 @@
 # hubcat
 
-hip cats, git hubs, good times.
+[![Build Status](https://travis-ci.org/softprops/hubcat.png?branch=master)](https://travis-ci.org/softprops/hubcat)
+
+hip cats, git hubs, good times. asynchronous vvip client of the github enterprises
 
 ## install
 
 In sbt...
 
-    libraryDependencies += "me.lessis" %% "hubcat" % "0.1.0"
+    libraryDependencies += "me.lessis" %% "hubcat" % "0.1.1"
 
 ## goals
 
@@ -73,9 +75,9 @@ for {
 }
 ```
 
-### Todo
+### Changelog
 
-(write some tests already)
+You can find a list of notable changes on [implicit.ly](http://notes.implicit.ly/search/hubcat)
 
 ### Resources
 

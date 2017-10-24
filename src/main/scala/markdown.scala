@@ -1,7 +1,6 @@
 package hubcat
 
 import dispatch._
-import com.ning.http.client.RequestBuilder
 
 object Markdown {
   def Plain = "markdown"

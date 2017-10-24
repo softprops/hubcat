@@ -1,6 +1,6 @@
 package hubcat
 
-import com.ning.http.client.{ AsyncHandler, RequestBuilder }
+import com.ning.http.client.AsyncHandler
 import dispatch._, dispatch.Defaults._
 import scala.concurrent.Future
 
@@ -14,9 +14,9 @@ object Client {
 
 abstract class Requests(credentials: Credentials, http: Http = Http)
   extends DefaultHosts {
-  def request[T](req: RequestBuilder)(handler: Client.Handler[T]): Future[T] =
+  def request[T](req: Req)(handler: Client.Handler[T]): Future[T] =
     http(credentials.sign(req) <:< Map("User-Agent" -> Client.Agent) > handler)
-  def complete(req: RequestBuilder): Client.Completion = new Client.Completion {
+  def complete(req: Req): Client.Completion = new Client.Completion {
     override def apply[T](handler: Client.Handler[T]) =
       request(req)(handler)
   }

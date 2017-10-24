@@ -1,6 +1,5 @@
 package hubcat
 
-import com.ning.http.client.RequestBuilder
 import dispatch._
 import java.util.Date
 import org.json4s.JsonDSL._
@@ -64,7 +63,7 @@ trait Gists { self: Requests =>
 
    protected [this]
    object GistMethods {
-    case class GistLimiter(base: RequestBuilder, sinceval: Option[String] = None)
+    case class GistLimiter(base: Req, sinceval: Option[String] = None)
     extends Client.Completion {
       def since(d: Date) = copy(sinceval = Some(ISO8601(d)))
       override def apply[T](handler: Client.Handler[T]) =
@@ -89,14 +88,14 @@ trait Gists { self: Requests =>
      extends Client.Completion {
 
        protected [this]
-       case class Comment(cid: Int, accept: String = Types.GithubJson)
+       case class Comment(cid: Int, accept: String = Accept.GithubJson)
          extends Client.Completion {
 
            def accepting = new {
-             def raw = copy(accept = Types.RawJson)
-             def text = copy(accept = Types.TextJson)
-             def html = copy(accept = Types.HtmlJson)
-             def fullJson = copy(accept = Types.FullJson)
+             def raw = copy(accept = Accept.RawJson)
+             def text = copy(accept = Accept.TextJson)
+             def html = copy(accept = Accept.HtmlJson)
+             def fullJson = copy(accept = Accept.FullJson)
            }
 
            /** http://developer.github.com/v3/gists/comments/#delete-a-comment */
