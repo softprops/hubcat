@@ -1,6 +1,5 @@
 package hubcat
 
-import com.ning.http.client.RequestBuilder
 import dispatch._
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact

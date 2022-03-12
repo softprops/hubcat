@@ -1,0 +1,21 @@
+{
+  "organization" : "me.lessis",
+  "name" : "hubcat",
+  "version" : "0.1.1",
+  "description" : "a vvip client of the github enterprises",
+  "site" : "https://github.com/softprops/hubcat/",
+  "tags" : [ "github", "gist" ],
+  "docs" : "",
+  "resolvers" : [ "https://oss.sonatype.org/content/repositories/releases" ],
+  "dependencies" : [ {
+    "organization" : "net.databinder.dispatch",
+    "name" : "dispatch-json4s-native",
+    "version" : "0.10.1"
+  } ],
+  "scalas" : [ "2.9.3", "2.10.0", "2.10.1", "2.10.2" ],
+  "licenses" : [ {
+    "name" : "MIT",
+    "url" : "https://github.com/softprops/hubcat/blob/0.1.1/LICENSE"
+  } ],
+  "sbt" : false
+}
